@@ -1,0 +1,3 @@
+[submodule "email_cohere_weblm"]
+	path = email_cohere_weblm
+	url = https://github.com/ejri/email_cohere_weblm
