@@ -11,4 +11,4 @@ Features:
 - ability to fix the LM's mistakes online and add them to the reference set for future use
 
 
-¯\_(ツ)_/¯ 
+¯\\_(ツ)_/¯ 
