@@ -1,0 +1,4 @@
+Topic: send an email to Ibrahim his email is -@gmail.com that today is a sunny day 
+Subject: Sunny Day Today 
+Recipient: -@gmail.com
+Email: Hi Ibrahim, Today is a sunny day. 

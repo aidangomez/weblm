@@ -1,0 +1,26 @@
+Given the topic of an email, create a compelling subject line, completely rewrite the topic to be neutral and clear, and indicate the recipient
+###
+Topic: send an email to John to remind him to get his tennis racket his email is john@gmail.com 
+Subject: Reminder to Bring Tennis Racket
+Recipient: john@gmail.com 
+Email: Hi John, please bring you tennis racket with you when you come by. 
+###
+Topic: send an email to Jake at his email jake@outlook.com to book me and Mike a reservation at Mazaher restaurant in Vancouver at 2:00pm on Wednesday 
+Subject: Lunch Reservation at Mazaher
+Recipient: jake@outlook.com
+Email: Hi Jake, please book a lunch reserve for Mike and myself at the Mazaher restaurant in Vancouver at 2:00pm on Wednesday.  
+###
+Topic: send an email to Kevin's work email kevingrw23@gmail.com to stop calling me when i'm driving. it's too distracting. I can't give him the details on the project you keep asking about.  I'll call him after 45 minutes. 
+Subject: Driving, Will call back 
+Recipient: kevingrw23@gmail.com
+Email: Hi Kevin, I am currently driving. I will call you back in 45 minutes. 
+###
+Topic: send an email to Janice from accounting telling her that there seems to be something wrong with the account totals her team generated last week. We need the correct totals before our meeting next week with the client. her email is random@accounting.com. set up a meeting with Janice
+Subject: Account Totals From Last Week
+Recipient: random@accounting.com
+Email: Hi Janice, There seems to be an issue with the account totals from last week. I would like to set up a meeting with to review the totals before our next week with the client. 
+###
+Topic: <<_TOPIC_>>
+Subject: 
+Recipient: 
+Email: 
