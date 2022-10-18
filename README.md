@@ -19,5 +19,5 @@ Features:
 
 
 ## Files to add
-1. `specials.json` - You should store sensitive information like "Password": "password" to avoid saving to the `examples.json`. 
+1. `specials.json` - You should store sensitive information like "Password": "password" to avoid saving it to `examples.json`. 
 
