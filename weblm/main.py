@@ -13,8 +13,7 @@ from multiprocessing import Pool
 import cohere
 
 from .controller import Command, Controller, Prompt
-from .crawler import URL_PATTERN, Crawler, AsyncCrawler
-
+from .crawler import URL_PATTERN, Crawler
 
 co = cohere.Client(os.environ.get("COHERE_KEY"), check_api_key=False)
 
@@ -68,4 +67,3 @@ if (__name__ == "__main__"):
             response = None
         elif isinstance(response, Prompt):
             response = input(str(response))
-    

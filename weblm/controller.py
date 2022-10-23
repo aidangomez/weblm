@@ -89,6 +89,7 @@ user_prompt_3 = ("Given state:\n{self._construct_state(url, pruned_elements)}"
                  "\n\t(s) save example, accept, and continue"
                  "\n\t(enter a new command) type your own command to replace the model's suggestion" + user_prompt_end)
 
+
 def _fn(x):
     if len(x) == 3:
         option, prompt, self = x
@@ -197,7 +198,7 @@ class Controller:
         self.objective = objective
         self.previous_commands: List[str] = []
         self.moments: List[Tuple[str, str]] = []
-        self.user_responses:DefaultDict[str, int] = defaultdict(int)
+        self.user_responses: DefaultDict[str, int] = defaultdict(int)
         self.reset_state()
 
     def is_running(self):
@@ -214,7 +215,7 @@ class Controller:
     def success(self):
         for state, command in self.moments:
             self._save_example(state, command)
-    
+
     def choose(self,
                template: str,
                options: List[Dict[str, str]],
@@ -302,7 +303,7 @@ class Controller:
     def _construct_prev_cmds(self) -> str:
         return "\n".join(
             f"{i+1}. {x}" for i, x in enumerate(self.previous_commands)) if self.previous_commands else "None"
-    
+
     def _construct_state(self, url: str, page_elements: List[str]) -> str:
         state = state_template
         state = state.replace("$objective", self.objective)
@@ -316,10 +317,7 @@ class Controller:
         return prompt.replace("$state", state)
 
     def _save_example(self, state: str, command: str):
-        example = ("Example:\n"
-                   f"{state}\n"
-                   f"Next Command: {command}\n"
-                   "----")
+        example = ("Example:\n" f"{state}\n" f"Next Command: {command}\n" "----")
         print(f"Example being saved:\n{example}")
         with open("examples.json", "r") as fd:
             embeds_examples = json.load(fd)
@@ -339,35 +337,33 @@ class Controller:
         os.replace("examples_tmp.json", "examples.json")
 
     def _construct_responses(self):
-        keys_to_save = ["y","n", "s", "command","success","cancel"]
+        keys_to_save = ["y", "n", "s", "command", "success", "cancel"]
         responses_to_save = defaultdict(int)
         for key, value in self.user_responses.items():
             if key in keys_to_save:
                 responses_to_save[key] = value
             elif key not in keys_to_save and key:
-                responses_to_save["command"]+=1
-        
+                responses_to_save["command"] += 1
+
         self.user_responses = responses_to_save
         print(f"Responses being saved:\n{dict(responses_to_save)}")
-        
-    
+
     def save_responses(self):
-        keys_to_save = ["y","n", "s", "command","success","cancel"]
+        keys_to_save = ["y", "n", "s", "command", "success", "cancel"]
         # Check if data file already exists
         responses_filepath = "responses.csv"
         if os.path.isfile(responses_filepath):
             print("File exists")
-            with open(responses_filepath,"a+") as fd:
+            with open(responses_filepath, "a+") as fd:
                 wr = csv.writer(fd, quoting=csv.QUOTE_ALL)
                 wr.writerow([self.user_responses[key] for key in keys_to_save])
         else:
             print("No data available")
-            with open(responses_filepath,"w+") as fd:
+            with open(responses_filepath, "w+") as fd:
                 wr = csv.writer(fd, quoting=csv.QUOTE_ALL)
                 wr.writerow(keys_to_save)
                 wr.writerow([self.user_responses[key] for key in keys_to_save])
 
-            
     def _shorten_prompt(self, url, elements, examples, *rest_of_prompt, target: int = MAX_SEQ_LEN):
         state = self._construct_state(url, elements)
         prompt = self._construct_prompt(state, examples)
@@ -479,8 +475,7 @@ class Controller:
                     self._action = " click"
             elif response == "examples":
                 examples = "\n".join(examples)
-                return Prompt(f"Examples:\n{examples}\n\n"
-                              "Please respond with 'y' or 'n'")
+                return Prompt(f"Examples:\n{examples}\n\n" "Please respond with 'y' or 'n'")
             else:
                 return Prompt("Please respond with 'y' or 'n'")
 
@@ -560,8 +555,7 @@ class Controller:
         elif self._step == DialogueState.CommandFeedback:
             if response == "examples":
                 examples = "\n".join(examples)
-                return Prompt(f"Examples:\n{examples}\n\n"
-                              "Please respond with 'y' or 's'")
+                return Prompt(f"Examples:\n{examples}\n\n" "Please respond with 'y' or 's'")
             elif response == "prompt":
                 chosen_element = self._chosen_elements[0]["id"]
                 state, prompt = self._shorten_prompt(url, pruned_elements, examples, self._action, chosen_element)
@@ -600,7 +594,7 @@ class Controller:
         if self._prioritized_elements is None or self._prioritized_elements_hash != hash(frozenset(page_elements)):
             self._generate_prioritization(page_elements, url)
 
-        self.user_responses[response]+=1
+        self.user_responses[response] += 1
         self._construct_responses()
         action_or_prompt = self.pick_action(url, page_elements, response)
 
