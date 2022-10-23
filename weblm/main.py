@@ -13,7 +13,8 @@ from multiprocessing import Pool
 import cohere
 
 from .controller import Command, Controller, Prompt
-from .crawler import URL_PATTERN, Crawler
+from .crawler import URL_PATTERN, Crawler, AsyncCrawler
+
 
 co = cohere.Client(os.environ.get("COHERE_KEY"), check_api_key=False)
 
@@ -41,9 +42,11 @@ if (__name__ == "__main__"):
     crawler.go_to_page("google.com")
     while True:
         if response == "cancel":
+            controller.save_responses()
             crawler, controller = reset()
         elif response == "success":
             controller.success()
+            controller.save_responses()
             crawler, controller = reset()
         elif response is not None and re.match(
                 f"goto {URL_PATTERN}",
@@ -65,3 +68,4 @@ if (__name__ == "__main__"):
             response = None
         elif isinstance(response, Prompt):
             response = input(str(response))
+    
