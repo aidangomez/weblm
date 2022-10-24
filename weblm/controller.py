@@ -7,7 +7,7 @@ import os
 import re
 from collections import defaultdict
 from enum import Enum
-from multiprocessing import Pool
+from concurrent.futures import ThreadPoolExecutor
 from typing import Any, DefaultDict, Dict, List, Tuple, Union
 
 import cohere
@@ -231,7 +231,7 @@ class Controller:
             str: the most likely option from `options`
         """
         num_options = len(options)
-        with Pool(num_options) as pp:
+        with ThreadPoolExecutor(num_options) as pp:
             _lh = pp.map(
                 _fn,
                 zip(options, [template.format(**option) for option in options], [self] * num_options,
