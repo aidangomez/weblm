@@ -5,10 +5,11 @@ import csv
 import math
 import os
 import re
+
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from enum import Enum
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Dict, DefaultDict, List, Tuple, Union
 
 import cohere
 import numpy as np
