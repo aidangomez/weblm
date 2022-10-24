@@ -6,9 +6,9 @@ import math
 import os
 import re
 from collections import defaultdict
-from enum import Enum
 from concurrent.futures import ThreadPoolExecutor
-from typing import Any, DefaultDict, Dict, List, Tuple, Union
+from enum import Enum
+from typing import Any, Dict, List, Tuple, Union
 
 import cohere
 import numpy as np
