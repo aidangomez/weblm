@@ -1,21 +1,21 @@
+import csv
 import heapq
 import itertools
 import json
-import csv
 import math
 import os
 import re
-
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from enum import Enum
-from typing import Any, Dict, DefaultDict, List, Tuple, Union
+from typing import Any, DefaultDict, Dict, List, Tuple, Union
 
 import cohere
 import numpy as np
+from requests.exceptions import ConnectionError
 
 MAX_SEQ_LEN = 2000
-MAX_NUM_ELEMENTS = 100
+MAX_NUM_ELEMENTS = 250
 TYPEABLE = ["input", "select"]
 CLICKABLE = ["link", "button"]
 MODEL = "xlarge"
@@ -34,6 +34,7 @@ WebLM learns to carry out tasks *by demonstration*. That means that you'll need 
 To control the system:
 - You can see what the model sees at each step by looking at the list of elements the model can interact with
 - show: You can also see a picture of the browser window by typing `show`
+- goto: You can go to a specific webpage by typing `goto www.yourwebpage.com`
 - success: When the model has succeeded at the task you set out (or gotten close enough), you can teach the model by typing `success` and it will save it's actions to use in future interations
 - cancel: If the model is failing or you made a catastrophic mistake you can type `cancel` to kill the session
 - help: Type `help` to show this message
@@ -106,6 +107,9 @@ def _fn(x):
                                      return_likelihoods=return_likelihoods).generations[0].likelihood, option)
         except cohere.error.CohereError as e:
             print(f"Cohere fucked up: {e}")
+            continue
+        except ConnectionError as e:
+            print(f"Connection error: {e}")
             continue
 
 
@@ -198,7 +202,7 @@ class Controller:
         self.co = co
         self.objective = objective
         self.previous_commands: List[str] = []
-        self.moments: List[Tuple[str, str]] = []
+        self.moments: List[Tuple[str, str, str]] = []
         self.user_responses: DefaultDict[str, int] = defaultdict(int)
         self.reset_state()
 
@@ -214,8 +218,8 @@ class Controller:
         self._prioritized_elements_hash = None
 
     def success(self):
-        for state, command in self.moments:
-            self._save_example(state, command)
+        for url, elements, command in self.moments:
+            self._save_example(url=url, elements=elements, command=command)
 
     def choose(self,
                template: str,
@@ -286,12 +290,13 @@ class Controller:
     def gather_examples(self, state: str, topk: int = 5) -> List[str]:
         """Simple semantic search over a file of past interactions to find the most similar ones."""
         with open("examples.json", "r") as fd:
-            examples = json.load(fd)
+            history = json.load(fd)
 
-        if len(examples) == 0:
+        if len(history) == 0:
             return []
 
-        embeds, examples = zip(*examples)
+        embeds = [h["embedding"] for h in history]
+        examples = [h["example"] for h in history]
         embeds = np.array(embeds)
         embedded_state = np.array(self.co.embed(texts=[state], truncate="RIGHT").embeddings[0])
         scores = np.einsum("i,ji->j", embedded_state,
@@ -317,24 +322,31 @@ class Controller:
         prompt = prompt.replace("$examples", "\n\n".join(examples))
         return prompt.replace("$state", state)
 
-    def _save_example(self, state: str, command: str):
-        example = ("Example:\n" f"{state}\n" f"Next Command: {command}\n" "----")
+    def _save_example(self, url: str, elements: List[str], command: str):
+        state = self._construct_state(url, elements)
+        example = ("Example:\n"
+                   f"{state}\n"
+                   f"Next Command: {command}\n"
+                   "----")
         print(f"Example being saved:\n{example}")
         with open("examples.json", "r") as fd:
-            embeds_examples = json.load(fd)
-            embeds, examples = zip(*embeds_examples)
-            embeds, examples = list(embeds), list(examples)
+            history = json.load(fd)
+            examples = [h["example"] for h in history]
 
         if example in examples:
             print("example already exists")
             return
 
-        examples.append(example)
-        embeds.append(self.co.embed(texts=[example]).embeddings[0])
+        history.append({
+            "example": example,
+            "embedding": self.co.embed(texts=[example]).embeddings[0],
+            "url": url,
+            "elements": elements,
+            "command": command,
+        })
 
-        embeds_examples = list(zip(embeds, examples))
         with open("examples_tmp.json", "w") as fd:
-            json.dump(embeds_examples, fd)
+            json.dump(history, fd)
         os.replace("examples_tmp.json", "examples.json")
 
     def _construct_responses(self):
@@ -444,7 +456,10 @@ class Controller:
         if self._step == DialogueState.Action:
             action = " click"
             if any(y in x for y in TYPEABLE for x in page_elements):
-                state, prompt = self._shorten_prompt(url, self._prioritized_elements, examples, target=MAX_SEQ_LEN)
+                _test = list(
+                    filter(lambda x: any(x.startswith(y) for y in CLICKABLE + TYPEABLE), self._prioritized_elements))
+
+                state, prompt = self._shorten_prompt(url, _test, examples, target=MAX_SEQ_LEN)
 
                 action = self.choose(prompt + "{action}", [
                     {
@@ -476,7 +491,8 @@ class Controller:
                     self._action = " click"
             elif response == "examples":
                 examples = "\n".join(examples)
-                return Prompt(f"Examples:\n{examples}\n\n" "Please respond with 'y' or 'n'")
+                return Prompt(f"Examples:\n{examples}\n\n"
+                              "Please respond with 'y' or 'n'")
             else:
                 return Prompt("Please respond with 'y' or 'n'")
 
@@ -556,7 +572,8 @@ class Controller:
         elif self._step == DialogueState.CommandFeedback:
             if response == "examples":
                 examples = "\n".join(examples)
-                return Prompt(f"Examples:\n{examples}\n\n" "Please respond with 'y' or 's'")
+                return Prompt(f"Examples:\n{examples}\n\n"
+                              "Please respond with 'y' or 's'")
             elif response == "prompt":
                 chosen_element = self._chosen_elements[0]["id"]
                 state, prompt = self._shorten_prompt(url, pruned_elements, examples, self._action, chosen_element)
@@ -580,9 +597,9 @@ class Controller:
                 return Prompt(f"Invalid command '{self._cmd}'. Must match regex '{cmd_pattern}'. Try again...")
 
             if response == "s":
-                self._save_example(state=self._construct_state(url, pruned_elements[:50]), command=self._cmd)
+                self._save_example(url=url, elements=pruned_elements, command=self._cmd)
 
-        self.moments.append((self._construct_state(url, pruned_elements), self._cmd))
+        self.moments.append((url, pruned_elements, self._cmd))
         self.previous_commands.append(self._cmd)
 
         cmd = Command(self._cmd.strip())

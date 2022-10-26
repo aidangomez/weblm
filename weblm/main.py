@@ -38,6 +38,7 @@ if (__name__ == "__main__"):
     crawler, controller = reset()
 
     response = None
+    content = []
     crawler.go_to_page("google.com")
     while True:
         if response == "cancel":
@@ -47,6 +48,8 @@ if (__name__ == "__main__"):
             controller.success()
             controller.save_responses()
             crawler, controller = reset()
+        elif response == "back":
+            controller.reset_state()
         elif response is not None and re.match(
                 f"goto {URL_PATTERN}",
                 response,
@@ -57,6 +60,8 @@ if (__name__ == "__main__"):
             time.sleep(2)
 
         content = crawler.crawl()
+        while len(content) == 0:
+            content = crawler.crawl()
         print(content)
         response = controller.step(crawler.page.url, content, response)
 
