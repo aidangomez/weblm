@@ -285,9 +285,10 @@ class Crawler:
             meta_data = []
 
             # inefficient to grab the same set of keys for kinds of objects but its fine for now
-            element_attributes = find_attributes(
-                attributes[index],
-                ["type", "placeholder", "aria-label", "name", "class", "id", "title", "alt", "role", "value"])
+            element_attributes = find_attributes(attributes[index], [
+                "type", "placeholder", "aria-label", "name", "class", "id", "title", "alt", "role", "value",
+                "aria-labelledby"
+            ])
 
             ancestor_exception = is_ancestor_of_anchor or is_ancestor_of_button or is_ancestor_of_select
             ancestor_node_key = None

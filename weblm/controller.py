@@ -15,7 +15,7 @@ import numpy as np
 from requests.exceptions import ConnectionError
 
 MAX_SEQ_LEN = 2000
-MAX_NUM_ELEMENTS = 250
+MAX_NUM_ELEMENTS = 50
 TYPEABLE = ["input", "select"]
 CLICKABLE = ["link", "button"]
 MODEL = "xlarge"
@@ -68,6 +68,37 @@ Previous actions:
 $previous_commands"""
 
 prioritization_template = """Here are the most relevant elements on the webpage (links, buttons, selects and inputs) to achieve the objective below:
+Objective: buy me toothpaste from amazon
+URL: https://www.google.com/search?q=toothpaste+amazon&source=hp&ei=CpBZY5PrNsKIptQP77Se0Ag&iflsig=AJiK0e
+Relevant elements:
+link 255 role="text" role="text" "toothpaste - Amazon.com https://www.amazon.com › toothpaste › k=toothpaste"
+link 192 role="text" role="text" "Best Sellers in Toothpaste - Amazon.ca https://www.amazon.ca › zgbs › beauty"
+link 148 role="heading" role="text" "Shop Amazon toothpaste - Amazon.ca Official Site Ad · https://www.amazon.ca/"
+---
+Here are the most relevant elements on the webpage (links, buttons, selects and inputs) to achieve the objective below:
+Objective: book me in for 2 at bar isabel in toronto on friday night
+URL: https://www.opentable.ca/r/bar-isabel-toronto
+Relevant elements:
+select 119 TxpENin57omlyGS8c0YB Time selector restProfileSideBartimePickerDtpPicker "5:00 p.m. 5:30 p.m. 6:00 p.m. 6:30 p.m. 7:00 p.m. 7:30 p.m. 8:00 p.m. 8:30 p.m. 9:00 p.m. 9:30 p.m. 10:00 p.m. 10:30 p.m. 11:00 p.m. 11:30 p.m."
+select 114 Party size selector FfVyD58WJTQB9nBaLQRB restProfileSideBarDtpPartySizePicker "1 person 2 people 3 people 4 people 5 people 6 people 7 people 8 people 9 people 10 people 11 people 12 people 13 people 14 people 15 people 16 people 17 people 18 people 19 people 20 people"
+button 121 aria-label="Find a time" "Find a time"
+---
+Here are the most relevant elements on the webpage (links, buttons, selects and inputs) to achieve the objective below:
+Objective: email aidan@cohere.com telling him I'm running a few mins late
+URL: https://www.google.com/?gws_rd=ssl
+Relevant elements:
+link 3 "Gmail"
+input 10 gLFyf gsfi q text combobox Search Search
+---
+Here are the most relevant elements on the webpage (links, buttons, selects and inputs) to achieve the objective below:
+Objective: buy me a pair of sunglasses from amazon
+URL: https://www.amazon.ca/LUENX-Aviator-Sunglasses-Polarized-Gradient/dp/B08P7HMKJW
+Relevant elements:
+button 153 add-to-cart-button submit.add-to-cart Add to Shopping Cart a-button-input Add to Cart
+button 155 buy-now-button submit.buy-now a-button-input
+select 152 quantity quantity a-native-dropdown a-declarative "1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30"
+---
+Here are the most relevant elements on the webpage (links, buttons, selects and inputs) to achieve the objective below:
 Objective: $objective
 URL: $url
 Relevant elements:
@@ -85,10 +116,12 @@ user_prompt_2 = ("Given state:\n{self._construct_state(url, pruned_elements)}"
                  "\n\nSuggested command: {cmd}.\n\t(y) accept and continue"
                  "\n\t(s) save example, accept, and continue"
                  "\n{other_options}"
+                 "\n\t(back) choose a different action"
                  "\n\t(enter a new command) type your own command to replace the model's suggestion" + user_prompt_end)
 user_prompt_3 = ("Given state:\n{self._construct_state(url, pruned_elements)}"
                  "\n\nSuggested command: {self._cmd}.\n\t(y) accept and continue"
                  "\n\t(s) save example, accept, and continue"
+                 "\n\t(back) choose a different action"
                  "\n\t(enter a new command) type your own command to replace the model's suggestion" + user_prompt_end)
 
 
@@ -554,7 +587,6 @@ class Controller:
                     }, pruned_elements)),
                     group_size,
                     topk=5)
-                print(self._chosen_elements)
                 chosen_element = self._chosen_elements[0]["id"]
 
                 state = self._construct_state(url, pruned_elements)

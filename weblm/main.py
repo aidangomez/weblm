@@ -47,7 +47,7 @@ if (__name__ == "__main__"):
         elif response == "success":
             controller.success()
             controller.save_responses()
-            crawler, controller = reset()
+            exit(0)
         elif response == "back":
             controller.reset_state()
         elif response is not None and re.match(
@@ -62,10 +62,7 @@ if (__name__ == "__main__"):
         content = crawler.crawl()
         while len(content) == 0:
             content = crawler.crawl()
-        print(content)
         response = controller.step(crawler.page.url, content, response)
-
-        print(response)
 
         if isinstance(response, Command):
             crawler.run_cmd(str(response))
