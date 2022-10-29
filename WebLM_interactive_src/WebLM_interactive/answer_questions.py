@@ -25,7 +25,8 @@ def personal_assistant(prompt):
     while True:
         try:
             response = co.generate(
-                model='xlarge',
+                # model='xlarge',
+                model='command-beta', 
                 prompt= prompt,
                 max_tokens=200,
                 temperature=1.8,
