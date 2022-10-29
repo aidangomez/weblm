@@ -189,6 +189,15 @@ def split_list_by_separators(l: List[Any], separator_sequences: List[List[Any]])
     return split_list
 
 
+def search(co: cohere.Client, query: str, items: List[str], topk: int) -> List[str]:
+    embedded_items = np.array(co.embed(texts=items, truncate="RIGHT").embeddings)
+    embedded_query = np.array(co.embed(texts=[query], truncate="RIGHT").embeddings[0])
+    scores = np.einsum("i,ji->j", embedded_query,
+                       embedded_items) / (np.linalg.norm(embedded_query) * np.linalg.norm(embedded_items, axis=1))
+    ind = np.argsort(scores)[-topk:]
+    return np.array(items)[ind]
+
+
 class Prompt:
 
     def __init__(self, prompt: str) -> None:
@@ -249,6 +258,7 @@ class Controller:
         self._chosen_elements: List[Dict[str, str]] = []
         self._prioritized_elements = None
         self._prioritized_elements_hash = None
+        self._page_elements = None
 
     def success(self):
         for url, elements, command in self.moments:
@@ -526,6 +536,11 @@ class Controller:
                 examples = "\n".join(examples)
                 return Prompt(f"Examples:\n{examples}\n\n"
                               "Please respond with 'y' or 'n'")
+            elif re.match(r'search (.+)', response):
+                query = re.match(r'search (.+)', response).group(1)
+                results = search(self.co, query, self._page_elements, topk=50)
+                return Prompt(f"Query: {query}\nResults:\n{results}\n\n"
+                              "Please respond with 'y' or 'n'")
             else:
                 return Prompt("Please respond with 'y' or 'n'")
 
@@ -614,6 +629,11 @@ class Controller:
                 return Prompt(eval(f'f"""{user_prompt_3}"""'))
             elif response == "elements":
                 return Prompt("\n".join(str(d) for d in self._chosen_elements))
+            elif re.match(r'search (.+)', response):
+                query = re.match(r'search (.+)', response).group(1)
+                results = search(self.co, query, self._page_elements, topk=50)
+                return Prompt(f"Query: {query}\nResults:\n{results}\n\n"
+                              "Please respond with 'y' or 'n'")
 
             if re.match(r'\d+', response):
                 chosen_element = self._chosen_elements[int(response) - 1]["id"]
@@ -640,6 +660,7 @@ class Controller:
 
     def step(self, url: str, page_elements: List[str], response: str = None) -> Union[Prompt, Command]:
         self._step = DialogueState.Action if self._step == DialogueState.Unset else self._step
+        self._page_elements = page_elements
 
         if self._prioritized_elements is None or self._prioritized_elements_hash != hash(frozenset(page_elements)):
             self._generate_prioritization(page_elements, url)
