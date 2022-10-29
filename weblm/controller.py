@@ -367,7 +367,7 @@ class Controller:
         return prompt.replace("$state", state)
 
     def _save_example(self, url: str, elements: List[str], command: str):
-        state = self._construct_state(url, elements)
+        state = self._construct_state(url, elements[:MAX_NUM_ELEMENTS])
         example = ("Example:\n"
                    f"{state}\n"
                    f"Next Command: {command}\n"
@@ -652,9 +652,9 @@ class Controller:
                 return Prompt(f"Invalid command '{self._cmd}'. Must match regex '{cmd_pattern}'. Try again...")
 
             if response == "s":
-                self._save_example(url=url, elements=pruned_elements, command=self._cmd)
+                self._save_example(url=url, elements=self._prioritized_elements, command=self._cmd)
 
-        self.moments.append((url, pruned_elements, self._cmd))
+        self.moments.append((url, self._prioritized_elements, self._cmd))
         self.previous_commands.append(self._cmd)
 
         cmd = Command(self._cmd.strip())
