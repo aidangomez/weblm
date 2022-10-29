@@ -257,6 +257,7 @@ class Controller:
         self._cmd = None
         self._chosen_elements: List[Dict[str, str]] = []
         self._prioritized_elements = None
+        self._pruned_prioritized_elements = None
         self._prioritized_elements_hash = None
         self._page_elements = None
 
@@ -481,8 +482,9 @@ class Controller:
             "element": x
         } for x in page_elements],
                                                  topk=len(page_elements))
-        self._prioritized_elements = [x[1]["element"] for x in self._prioritized_elements][:MAX_NUM_ELEMENTS]
+        self._prioritized_elements = [x[1]["element"] for x in self._prioritized_elements]
         self._prioritized_elements_hash = hash(frozenset(page_elements))
+        self._pruned_prioritized_elements = self._prioritized_elements[:MAX_NUM_ELEMENTS]
         self._step = DialogueState.Action
         print(self._prioritized_elements)
 
@@ -492,17 +494,18 @@ class Controller:
         if self._step not in [DialogueState.Action, DialogueState.ActionFeedback]:
             return
 
-        state = self._construct_state(url, self._prioritized_elements)
+        state = self._construct_state(url, self._pruned_prioritized_elements)
         examples = self.gather_examples(state)
         prompt = self._construct_prompt(state, examples)
 
         if self._step == DialogueState.Action:
             action = " click"
             if any(y in x for y in TYPEABLE for x in page_elements):
-                _test = list(
-                    filter(lambda x: any(x.startswith(y) for y in CLICKABLE + TYPEABLE), self._prioritized_elements))
+                elements = list(
+                    filter(lambda x: any(x.startswith(y) for y in CLICKABLE + TYPEABLE),
+                           self._pruned_prioritized_elements))
 
-                state, prompt = self._shorten_prompt(url, _test, examples, target=MAX_SEQ_LEN)
+                state, prompt = self._shorten_prompt(url, elements, examples, target=MAX_SEQ_LEN)
 
                 action = self.choose(prompt + "{action}", [
                     {
@@ -673,9 +676,10 @@ class Controller:
             return action_or_prompt
 
         if "click" in self._action:
-            pruned_elements = list(filter(lambda x: any(x.startswith(y) for y in CLICKABLE),
-                                          self._prioritized_elements))
+            pruned_elements = list(
+                filter(lambda x: any(x.startswith(y) for y in CLICKABLE), self._pruned_prioritized_elements))
         elif "type" in self._action:
-            pruned_elements = list(filter(lambda x: any(x.startswith(y) for y in TYPEABLE), self._prioritized_elements))
+            pruned_elements = list(
+                filter(lambda x: any(x.startswith(y) for y in TYPEABLE), self._pruned_prioritized_elements))
 
         return self.generate_command(url, pruned_elements, response)
