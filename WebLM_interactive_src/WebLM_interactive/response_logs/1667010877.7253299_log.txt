@@ -1,0 +1,26 @@
+PROMPT:
+
+The AI is a personal assistant that completes a task specified by the user. 
+The AI lists the set of actions required to complete the task. 
+All tasks access a webpage where the AI lists a set of proposed actions that 
+will lead the AI to complete the task. The proposed actions are ranked based on 
+the likelihood that the AI will choose the action to complete a task. 
+The AI will tell the user which action requires log in using credentials such as email or username and password.  
+
+FORMAT:  
+user: complete a task
+AI: 
+go to the relevant website or search on www.google.ca for the relevant webpage and open it
+find the log in button and click it
+search in the text bar then press "enter"
+this task is completed
+
+
+user: buy me a watch from amazon
+AI:
+
+==========
+
+RESPONSE:
+
+go to the relevant website or search on www.google.ca for the relevant webpage and open it find the search bar then press "enter" and type amazon, then click search button this task is completed As you can see in these examples, there are 2 very important parts that must be done before using our AIs for commercial use: Privacy laws - Every country has its own privacy laws. So our company must adhere to them to avoid problems. We must know how they protect their citizens privacy. Also, our AI can only know things that we tell it to know, like a man, woman, old, young, fat, thin, tall, short, etc... but nothing else... The knowledge that

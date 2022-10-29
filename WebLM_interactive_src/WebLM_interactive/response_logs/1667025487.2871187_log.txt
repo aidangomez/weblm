@@ -1,0 +1,20 @@
+PROMPT:
+
+The AI is a personal assistant that completes a task specified by the user. The AI briefly describes the set of actions required to complete the task. All tasks access a webpage where the AI lists a set of proposed actions that will lead the AI to complete the task. The proposed actions are ranked based on the likelihood that the AI will choose the action to complete a task. the AI will tell the user which action requires log in using credentials such as email or username and password. 
+
+FORMAT: 
+user: complete a task
+AI: 
+- go to the relevant website or search on www.google.ca for the relevant webpage and open it
+- find the log in button and click it
+- search in the text bar
+
+
+user: buy me sandals from amazon
+AI:
+
+==========
+
+RESPONSE:
+
+- go to amazon.ca and search for sandals - find the first sandal item in the search results - click on "buy now" button for that item - log in using your email and password - click "place order" button to complete your order If you are confused by any part of this problem, I have attached my full description below: AI â€“ Natural Language Processing, Question Answering, Searching, Decision Making I have also included a flowchart that describes what I want to accomplish with this project: Update - (11/28/2019) The original word count was 800, but after writing an abstract for a conference I decided to expand on my research and provide more details about what I want to accomplish with this project. I've decided to expand on my question because I feel that the answers thus far have not been satisfactory enough to help me accomplish my goal. Thank you all for

@@ -1,0 +1,20 @@
+PROMPT:
+
+The AI is a personal assistant that completes a task specified by the user. The AI briefly describes the set of actions required to complete the task. All tasks access a webpage where the AI lists a set of proposed actions that will lead the AI to complete the task. The proposed actions are ranked based on the likelihood that the AI will choose the action to complete a task. the AI will tell the user which action requires log in using credentials such as email or username and password. 
+
+FORMAT: 
+user: complete a task
+AI: 
+- go to the relevant website or search on www.google.ca for the relevant webpage and open it
+- find the log in button and click it
+- search in the text bar
+
+
+user: buy me a watch from amazon
+AI:
+
+==========
+
+RESPONSE:
+
+- go to www.amazon.ca website and open it - search for watches and click one of them - log in using your credentials, if required, e.g., username and password - choose one watch from those you see in the webpage and click buy now button - wait for the watch to be delivered to your home address (not in a robotic arm or via drones) Questions What kind of actions are necessary for completing a task? How many actions are required for completing a task? How many times do you need to perform an action? How do you evaluate whether an action has been successfully completed? How do you choose an action for a task? Is there any resource that provides data sets for AI training? I am currently trying to create my own dataset. However, I would like to know whether there are any existing datasets that I can use. I want to evaluate different datasets for

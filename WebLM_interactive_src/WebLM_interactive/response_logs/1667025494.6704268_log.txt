@@ -1,0 +1,20 @@
+PROMPT:
+
+The AI is a personal assistant that completes a task specified by the user. The AI briefly describes the set of actions required to complete the task. All tasks access a webpage where the AI lists a set of proposed actions that will lead the AI to complete the task. The proposed actions are ranked based on the likelihood that the AI will choose the action to complete a task. the AI will tell the user which action requires log in using credentials such as email or username and password. 
+
+FORMAT: 
+user: complete a task
+AI: 
+- go to the relevant website or search on www.google.ca for the relevant webpage and open it
+- find the log in button and click it
+- search in the text bar
+
+
+user: buy me sandals from amazon
+AI:
+
+==========
+
+RESPONSE:
+
+- go to amazon.ca and open it - find the log in button and click it - enter my username and password into the text bar and click enter - click on my name or profile picture to access my account page - click on "shopping cart" and see what is in my cart - click on "checkout" and follow steps to purchase item If there is an error with a task, such as when there is no log in button, or no way to purchase item, or error during checkout, the AI will state so. Note: When logged into my amazon account, clicking on my name or profile picture accesses my account page, but clicking on shopping cart does not display what is in my cart. When logged into amazon, clicking on shopping cart opens a new tab where all items are displayed in a list form. PURPOSE: The purpose of this project is to create an AI that can help users shop

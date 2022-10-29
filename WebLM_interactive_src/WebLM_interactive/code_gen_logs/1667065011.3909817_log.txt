@@ -1,0 +1,53 @@
+PROMPT:
+
+
+ go to amazon website 
+ log in using your email and password 
+ go to the page for coffee products 
+ click on buy now button next to a coffee product 
+ confirm your order What's confusing about this problem is that, in order to determine whether the action will be taken, I have to search through every single webpage for relevant content, click buttons, fill out forms, and then check whether my AI has succeeded. This question was answered by other StackExchange users: https://stackoverflow.com/questions/2607400/a
+software
+development
+company
+is
+looking
+for
+ai
+software
+that
+will
+take
+action
+for
+the
+user https://stackoverflow.com/questions/2587081/making
+ai
+do
+stuff/15126718#15126718 I was wondering if anyone had any advice or could
+
+==========
+
+RESPONSE:
+
+// @version     1.0
+// @match       https://www.amazon.com/*
+// ==/UserScript==
+(function() {
+    'use strict';
+
+    var n = 0;
+
+    var recurse = function() {
+        // This is a recursive function which runs a series of steps until the entire process is complete or an error occurs. Each step takes about 15 seconds but only happens when the page changes for any reason, so most of the time it will be idle.
+
+        // There is no way to return from this function once it's started because if I did there would be no way to restart it later. Instead, I use a variable that switches between true and false every time it's called and has different results depending on what value that variable holds: True = The next step should be executed False = Try again in 5 seconds (so we don't flood the server with requests) If there are more than two steps, they must all have their own conditionals... How do you make the AI "do stuff" without making your code look like spaghetti? The answer: Recursion! Every step in my sequence calls this same function (which has been awkwardly named "recurse") so it can switch between states depending on whether or not we've reached its final goal yet. Once all desired actions are performed recursively, our script will stop running indefinitely until another webpage refresh happens or if we manually refresh our browser window using Ctrl+R or F5 keystrokes like normal people do very often when browsing websites for fun instead of just sitting at home waiting for something interesting to grab their attention!  */
+        if (n % 2 == 0) {
+            document.body.innerHTML += "<div style='position:absolute;top:0px;left:-3000px;background-color:#fff'>\n<p>\nThe next step should be executed</span>\n</p></div>";
+
+            /* This div element was inserted into our page using javascript because Amazon doesn't allow us to directly inject css styles onto their website otherwise they might block us out completely which would prevent us from ever viewing any content ever again forever :( Therefore since everything else already exists within frame elements created by Amazon in order not to break the layout too much with our own content injections we'll need some inline styling here too just so they don't overlap over top while also being hidden offscreen as well like how most ads usually get displayed nowadays these days anyways anyways anyways ...*/
+
+            n++; // Incrementing variable before switching state means that if anything goes wrong before then nothing gets lost; however, once incremented values cannot be rolled back either so always make sure everything works properly beforehand especially within loops where some kind of infinite loop could occur if not handled correctly beforehand beforehand beforehand... ;) ;P [/code]*/
+        } else {
+            document.body.innerHTML += "<div style='position:absolute;top:0px;left:-3000px;background-color:#fff'>\n<p>\nTry again in 5 seconds</span>\n</p></div>"; // Another 2 minute timer has been added here (we're almost half way there!). Now remember - recursion isn't just useful when doing repetitive things over again! Recursion can also help save memory usage by allowing you to store data outside of RAM while still being able to access it quickly whenever needed :) So next up let's take care about that pesky popup ad that keeps popping up every time someone visits their homepage ☺️️ 😍 The code below will check whether there's an ad on screen right now, then close out any ones found before continuing with other tasks such as logging into your account :) */
+
+            n++; // Incrementing variable before switching state means that if anything goes wrong before then nothing gets lost; however, once incremented values cannot be rolled back either so always make sure everything works properly beforehand especially within loops where some kind of infinite loop could occur if not handled correctly beforehand beforehand beforehand... ;) ;P [/co

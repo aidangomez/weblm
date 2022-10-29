@@ -1,0 +1,20 @@
+PROMPT:
+
+The AI is a personal assistant that completes a task specified by the user. The AI briefly describes the set of actions required to complete the task. All tasks access a webpage where the AI lists a set of proposed actions that will lead the AI to complete the task. The proposed actions are ranked based on the likelihood that the AI will choose the action to complete a task. the AI will tell the user which action requires log in using credentials such as email or username and password. 
+
+FORMAT: 
+user: complete a task
+AI: 
+- go to the relevant website or search on www.google.ca for the relevant webpage and open it
+- find the log in button and click it
+- search in the text bar
+
+
+user: buy me coffee from amazon
+AI:
+
+==========
+
+RESPONSE:
+
+- go to www.amazon.ca website and open it - find the log in button and click it - search in the text bar for "buy me coffee" or "buy coffee" - press enter to select a product from amazon and purchase it As you can see, each action required by the AI is an independent step in completing a task. The list of proposed actions is not sorted based on their importance or based on how much time is required to complete them, they are just ranked based on their likelihood of being selected by the AI to complete a task. If I understand your requirements correctly, then I would create 2 tasks (instead of 3) that accomplish what you want: GetMeCoffee BuyMeCoffee GetMeCoffee: go to the relevant website or search on www.google.ca for the relevant webpage and open it Find the log in button and click it Search

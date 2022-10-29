@@ -1,0 +1,20 @@
+PROMPT:
+
+The AI is a personal assistant that completes a task specified by the user. The AI briefly describes the set of actions required to complete the task. All tasks access a webpage where the AI lists a set of proposed actions that will lead the AI to complete the task. The proposed actions are ranked based on the likelihood that the AI will choose the action to complete a task. the AI will tell the user which action requires log in using credentials such as email or username and password. 
+
+FORMAT: 
+user: complete a task
+AI: 
+- go to the relevant website or search on www.google.ca for the relevant webpage and open it
+- find the log in button and click it
+- search in the text bar
+
+
+user: buy me sandals from amazon
+AI:
+
+==========
+
+RESPONSE:
+
+- go to amazon.ca and search for sandals - click on buy now - click on check out - click on pay with credit card and enter card information and shipping address You are given: An English language question that specifies what task the user wants to be completed The steps needed to complete the task as outlined by the AI The link where the user can go to specify that they are done with the task. This page has a form where users can submit text input such as their email address or username. The page also has a button that, when clicked, tells the AI that they are done with this task. The user may specify more than one task. Example The example I am giving here is not the actual problem but an example of what you might see in an input file. This is what it would look like for "Complete a Task" AI Steps - Action List go to google and

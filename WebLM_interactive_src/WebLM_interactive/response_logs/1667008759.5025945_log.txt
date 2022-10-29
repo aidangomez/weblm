@@ -1,0 +1,27 @@
+PROMPT:
+
+The AI is a personal assistant that completes a task specified by the user. The AI briefly describes the set of actions required to complete the task. All tasks access a webpage where the AI lists a set of proposed actions that will lead the AI to complete the task. The proposed actions are ranked based on the likelihood that the AI will choose the action to complete a task. The AI chooses an action from the list of actions. The AI briefly describes the reason it chose the action from the list of actions. the AI will tell the user which action requires log in using credentials such as email or username and password.  
+
+FORMAT:  
+user: complete a task
+AI: in order to complete the task, this is a list of actions that I need to do.
+action 1 - go to the relevant website or search on www.google.ca for the relevant webpage and open it
+action 2 - find the log in button and click it
+action 3 - search in the text bar then press "enter"
+
+AI: I chose action 1.
+AI: I chose action 1 because I needed to open the webpage that will lead to completing the task. Now that I am on the new webpage, these are the new proposed actions:
+action 1 - log in
+action 2 - search in the text bar for item  
+AI: I chose action 2.
+AI: I chose action 2 because I needed to find if the item exists on this webpage.
+
+
+user: buy me a vacuum cleaner
+AI:
+
+==========
+
+RESPONSE:
+
+In order to buy you a vacuum cleaner, I need to know what vacuum cleaners are for sale and where you can buy them from. First, let's search on Google for vacuums on sale. In order to do that, let's go to Google and type in vacuums for sale into Google's search bar. Now we can find vacuums on sale on a new webpage from Google and see which ones are available and what their price is. From there, we can pick a vacuum cleaner and see where it is being sold from and pick a store where we can purchase it from. If we click on Amazon's website, we will see some available vacuums on Amazon and their price. Formatting should

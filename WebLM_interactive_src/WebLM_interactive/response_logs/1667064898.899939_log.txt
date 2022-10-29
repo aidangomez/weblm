@@ -1,0 +1,21 @@
+PROMPT:
+
+The AI is a personal assistant that completes a task specified by the user. The AI briefly describes the set of actions required to complete the task. All tasks access a webpage where the AI lists a set of proposed actions that will lead the AI to complete the task. The proposed actions are ranked based on the likelihood that the AI will choose the action to complete a task. the AI will tell the user which action requires log in using credentials such as email or username and password. 
+
+FORMAT: 
+user: complete a task
+AI: 
+- go to the relevant website or search on www.google.ca for the relevant webpage and open it
+- find the log in button and click it
+- search in the text bar
+- 
+
+
+user: buy me coffee from amazon
+AI:
+
+==========
+
+RESPONSE:
+
+- go to www.amazon.ca - find product B00xN - search for it in the search bar - click buy now - To run it you need Python 3, numpy, pandas, matplotlib, tensorflow and tensorflow-gpu (only if you want to use GPU). It has been tested with python 3.6 and python 3.7. I will keep updating this post with instructions for how to run it in more platforms as I am working on it now. Requirements: https://github.com/VariosAlfredos/TASK-ALI/blob/master/requirements.txt What I have so far: https://github.com/VariosAlfredos/TASK-ALI/blob/master/tutorial_examples.ipynb A guide to use TAS
