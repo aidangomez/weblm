@@ -96,6 +96,7 @@ class Crawler:
 
     def type(self, id, text):
         self.click(id)
+        self.page.evaluate(f"() => document.activeElement.value = ''")
         self.page.keyboard.type(text)
 
     def enter(self):
@@ -287,7 +288,7 @@ class Crawler:
             # inefficient to grab the same set of keys for kinds of objects but its fine for now
             element_attributes = find_attributes(attributes[index], [
                 "type", "placeholder", "aria-label", "name", "class", "id", "title", "alt", "role", "value",
-                "aria-labelledby"
+                "aria-labelledby", "aria-description", "aria-describedby"
             ])
 
             ancestor_exception = is_ancestor_of_anchor or is_ancestor_of_button or is_ancestor_of_select
@@ -533,6 +534,7 @@ class AsyncCrawler(Crawler):
 
     async def type(self, id, text):
         await self.click(id)
+        await self.page.evaluate(f"() => document.activeElement.value = ''")
         await self.page.keyboard.type(text)
 
     async def enter(self):
