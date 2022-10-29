@@ -195,7 +195,7 @@ def search(co: cohere.Client, query: str, items: List[str], topk: int) -> List[s
     scores = np.einsum("i,ji->j", embedded_query,
                        embedded_items) / (np.linalg.norm(embedded_query) * np.linalg.norm(embedded_items, axis=1))
     ind = np.argsort(scores)[-topk:]
-    return np.array(items)[ind]
+    return np.flip(np.array(items)[ind], axis=0)
 
 
 class Prompt:
