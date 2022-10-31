@@ -1,0 +1,31 @@
+PROMPT:
+
+
+ go to the relevant website or search on www.amazon.com for the relevant page and open it 
+ find the search bar and type in the name of the book you want to buy 
+ click on the book you want to buy 
+ fill out the shipping information and pay for the book 
+ wait for the book to be shipped to you 
+ If you have any problems, please let me know. I'll be happy to help you out. 
+ Thank you for choosing Amazon! Thank you for choosing Amazon! FORMAT: User: Complete a task AI: Briefly describe the set of actions required to complete the task. All tasks access a webpage where the AI lists a set of proposed actions that will lead the AI to complete the task. The proposed actions are ranked based on the likelihood that the AI will choose the action to complete a task. The AI will tell the user which action requires log
+
+==========
+
+RESPONSE:
+
+function LogIn(userName, password){
+	/* the user needs to be able to log in (Toggle) 
+	The log in process consists of two phases: 
+	1. First, the user is asked for his or her email address and password. 
+	2. Then, the user is presented with a series of cards that help guide him or her through a process that allows him or her to create a new account.*/
+
+	var email = prompt("What's your e-mail?");
+
+    var pw = prompt("Enter password.");
+
+    chrome.storage.sync.set({'username': username});
+
+    chrome.storage.sync.set({'password': pw});  
+}
+// log out method for getting rid of session info and stopping current action workflow 
+function LogOut(){	chrome will automatically sign out you as soon as you shut down the browser Chrome;}	// check if logged in first by checking cookies, if not then it will ask them to log in before proceeding with task 	//logIn();

@@ -1,0 +1,38 @@
+PROMPT:
+
+
+ go to www.amazon.com and search for a lamp 
+ find a lamp that you like and add it to your cart 
+ check out and pay for the lamp 
+ wait for it to be delivered to your house 
+ enjoy your new lamp! 
+ If you have any problems, please contact me at 1
+800
+123
+4567. 
+ Thank you for choosing AI! 
+ Have a great day! 
+ Your AI, Tom. FORMAT: buy me a lamp from amazon AI: 
+ go to www.amazon.com and search for a lamp 
+ find a lamp that you like and add it to your cart 
+ check out and pay for the lamp 
+ wait for it to be delivered to your house 
+ enjoy your new lamp! If you have any problems, please contact me at 1
+800
+123
+4567. Thank you for choosing AI
+
+==========
+
+RESPONSE:
+
+try: 
+            from googlesearch import search 
+        except ImportError:  
+            print("No module named 'google' found") 
+  
+        # to search 
+        query = "buy me a lamp from amazon"
+  
+        for j in search(query, tld="co.in", num=10, stop=5, pause=2): 
+            print(j)
