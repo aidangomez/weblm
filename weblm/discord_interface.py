@@ -1,15 +1,16 @@
 import asyncio
 import chunk
 import os
+import traceback
 from typing import Dict, Tuple
 
 import cohere
 import discord
-from discord import Embed
+from discord import Embed, File
 from discord.ext import commands
 from playwright.async_api import async_playwright
 
-from .controller import Command, Controller, Prompt
+from .controller import Command, Controller, Prompt, help_msg
 from .crawler import AsyncCrawler
 
 co = cohere.Client(os.environ.get("COHERE_KEY"))
@@ -50,7 +51,7 @@ class MyClient(discord.Client):
 
     async def find_session(self, id, message):
         print(message.clean_content)
-        objective = message.clean_content
+        objective = message.clean_content.removeprefix("weblm ")
 
         if id not in self.sessions:
             print("did not find session")
@@ -67,11 +68,15 @@ class MyClient(discord.Client):
 
     async def respond_to_message(self, message):
         print(message.clean_content)
-        objective = message.clean_content
+        objective = message.clean_content.removeprefix("weblm ")
         crawler, controller = await self.find_session(message.id, message)
 
         if objective == "cancel":
             del self.sessions[message.id]
+            return
+        elif objective == "help":
+            msg = await message.channel.send(help_msg)
+            await msg.edit(suppress=True)
             return
         elif objective == "success":
             controller.success()
@@ -86,9 +91,9 @@ class MyClient(discord.Client):
             async with message.channel.typing():
                 if not controller.is_running():
                     print("Controller not yet running")
-                    response = controller.dialogue_step(crawler.page.url, content)
+                    response = controller.step(crawler.page.url, content)
                 else:
-                    response = controller.dialogue_step(crawler.page.url, content, response=objective)
+                    response = controller.step(crawler.page.url, content, response=objective)
 
                 print(response)
 
@@ -109,7 +114,7 @@ class MyClient(discord.Client):
             return
 
         print(message.clean_content)
-        objective = message.clean_content
+        objective = message.clean_content.removeprefix("weblm ")
         crawler, controller = await self.find_session(message.channel.starter_message.id, message)
 
         if objective == "cancel":
@@ -121,6 +126,14 @@ class MyClient(discord.Client):
             msg = await message.channel.send("🎉🎉🎉")
             await msg.edit(suppress=True)
             return
+        elif objective == "help":
+            msg = await message.channel.send(help_msg)
+            await msg.edit(suppress=True)
+            return
+        elif objective == "show":
+            path = await crawler.screenshot()
+            await message.channel.send(file=discord.File(path))
+            return
 
         while True:
             content = await crawler.crawl()
@@ -129,9 +142,9 @@ class MyClient(discord.Client):
             async with message.channel.typing():
                 if not controller.is_running():
                     print("Controller not yet running")
-                    response = controller.dialogue_step(crawler.page.url, content)
+                    response = controller.step(crawler.page.url, content)
                 else:
-                    response = controller.dialogue_step(crawler.page.url, content, response=objective)
+                    response = controller.step(crawler.page.url, content, response=objective)
 
                 print(response)
 
@@ -146,7 +159,7 @@ class MyClient(discord.Client):
 
     async def respond_to_dm(self, message):
         print(message.clean_content)
-        objective = message.clean_content
+        objective = message.clean_content.removeprefix("weblm ")
         crawler, controller = await self.find_session(message.author.id, message)
 
         if objective == "cancel":
@@ -154,9 +167,17 @@ class MyClient(discord.Client):
             return
         elif objective == "success":
             controller.success()
-            del self.sessions[message.channel.starter_message.id]
+            del self.sessions[message.author.id]
             msg = await message.channel.send("🎉🎉🎉")
             await msg.edit(suppress=True)
+            return
+        elif objective == "help":
+            msg = await message.channel.send(help_msg)
+            await msg.edit(suppress=True)
+            return
+        elif objective == "show":
+            path = await crawler.screenshot()
+            await message.channel.send(file=discord.File(path))
             return
 
         while True:
@@ -166,9 +187,9 @@ class MyClient(discord.Client):
             async with message.channel.typing():
                 if not controller.is_running():
                     print("Controller not yet running")
-                    response = controller.dialogue_step(crawler.page.url, content)
+                    response = controller.step(crawler.page.url, content)
                 else:
-                    response = controller.dialogue_step(crawler.page.url, content, response=objective)
+                    response = controller.step(crawler.page.url, content, response=objective)
 
                 print(response)
 
@@ -184,17 +205,18 @@ class MyClient(discord.Client):
     async def on_message(self, message):
         try:
             print(message)
-            if isinstance(
-                    message.channel,
-                    discord.TextChannel) and message.channel.id == 1026557845308723212 and message.author != self.user:
-                await self.respond_to_message(message)
-            elif isinstance(message.channel, discord.DMChannel) and message.author != self.user:
+            if isinstance(message.channel, discord.DMChannel) and message.author != self.user:
                 await self.respond_to_dm(message)
-            elif isinstance(message.channel, discord.Thread
-                           ) and message.channel.parent.id == 1026557845308723212 and message.author != self.user:
+            elif isinstance(message.channel, discord.TextChannel) and message.channel.id in [
+                    1026557845308723212, 1032611829186306048
+            ] and message.author != self.user and message.clean_content.startswith("weblm "):
+                await self.respond_to_message(message)
+            elif isinstance(message.channel, discord.Thread) and message.channel.parent.id in [
+                    1026557845308723212, 1032611829186306048
+            ] and message.author != self.user:
                 await self.respond_in_thread(message)
-        except Exception as e:
-            print(f"Exception caught: {e}")
+        except Exception:
+            print(f"Exception caught:\n{traceback.format_exc()}")
 
 
 async def main():

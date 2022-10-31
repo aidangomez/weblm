@@ -6,37 +6,66 @@
 #
 
 import os
+import re
+import time
 from multiprocessing import Pool
 
 import cohere
 
-from .controller import Controller
-from .crawler import Crawler
+from .controller import Command, Controller, Prompt
+from .crawler import URL_PATTERN, Crawler
 
-co = cohere.Client(os.environ.get("COHERE_KEY"))
+co = cohere.Client(os.environ.get("COHERE_KEY"), check_api_key=False)
 
 if (__name__ == "__main__"):
-    _crawler = Crawler()
 
-    def print_help():
-        print("(g) to visit url\n(u) scroll up\n(d) scroll dow\n(c) to click\n(t) to type\n" +
-              "(h) to view commands again\n(r) to run suggested command\n(o) change objective")
+    def reset():
+        _crawler = Crawler()
 
-    objective = "Make a reservation for 2 at 7pm at bistro vida in menlo park"
-    print("\nWelcome to natbot! What is your objective?")
-    i = input()
-    if len(i) > 0:
-        objective = i
+        def print_help():
+            print("(g) to visit url\n(u) scroll up\n(d) scroll dow\n(c) to click\n(t) to type\n" +
+                  "(h) to view commands again\n(r) to run suggested command\n(o) change objective")
 
-    _controller = Controller(co, objective)
+        objective = "Make a reservation for 2 at 7pm at bistro vida in menlo park"
+        print("\nWelcome to WebLM! What is your objective?")
+        i = input()
+        if len(i) > 0:
+            objective = i
 
-    cmd = None
-    _crawler.go_to_page("google.com")
+        _controller = Controller(co, objective)
+        return _crawler, _controller
+
+    crawler, controller = reset()
+
+    response = None
+    content = []
+    crawler.go_to_page("google.com")
     while True:
-        content = _crawler.crawl()
-        cmd = _controller.cli_step(_crawler.page.url, content).strip()
+        if response == "cancel":
+            controller.save_responses()
+            crawler, controller = reset()
+        elif response == "success":
+            controller.success()
+            controller.save_responses()
+            exit(0)
+        elif response == "back":
+            controller.reset_state()
+        elif response is not None and re.match(
+                f"goto {URL_PATTERN}",
+                response,
+        ):
+            url = re.match(URL_PATTERN, response[5:]).group(0)
+            response = None
+            crawler.go_to_page(url)
+            time.sleep(2)
 
-        if len(cmd) > 0:
-            print("Suggested command: " + cmd)
+        content = crawler.crawl()
+        while len(content) == 0:
+            content = crawler.crawl()
+        response = controller.step(crawler.page.url, content, response)
 
-        _crawler.run_cmd(cmd)
+        if isinstance(response, Command):
+            crawler.run_cmd(str(response))
+            response = None
+        elif isinstance(response, Prompt):
+            response = input(str(response))
