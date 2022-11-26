@@ -12,6 +12,9 @@ from multiprocessing import Pool
 
 import cohere
 
+from dotenv import load_dotenv
+load_dotenv()
+
 from .controller import Command, Controller, Prompt
 from .crawler import URL_PATTERN, Crawler
 

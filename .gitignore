@@ -3,3 +3,4 @@ examples.json
 */__pycache__
 poetry.lock
 screenshot.png
+.env
