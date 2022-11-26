@@ -41,7 +41,7 @@ def replace_special_fields(cmd):
 class Crawler:
 
     def __init__(self):
-        self.browser = sync_playwright().start().chromium.launch(headless=False,)
+        self.browser = sync_playwright().start().chromium.launch(headless=True,)
         self.context = self.browser.new_context(
             user_agent=
             "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36"
