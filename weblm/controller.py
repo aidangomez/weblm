@@ -67,36 +67,7 @@ $browser_content
 Previous actions:
 $previous_commands"""
 
-prioritization_template = """Here are the most relevant elements on the webpage (links, buttons, selects and inputs) to achieve the objective below:
-Objective: buy me toothpaste from amazon
-URL: https://www.google.com/search?q=toothpaste+amazon&source=hp&ei=CpBZY5PrNsKIptQP77Se0Ag&iflsig=AJiK0e
-Relevant elements:
-link 255 role="text" role="text" "toothpaste - Amazon.com https://www.amazon.com › toothpaste › k=toothpaste"
-link 192 role="text" role="text" "Best Sellers in Toothpaste - Amazon.ca https://www.amazon.ca › zgbs › beauty"
-link 148 role="heading" role="text" "Shop Amazon toothpaste - Amazon.ca Official Site Ad · https://www.amazon.ca/"
----
-Here are the most relevant elements on the webpage (links, buttons, selects and inputs) to achieve the objective below:
-Objective: book me in for 2 at bar isabel in toronto on friday night
-URL: https://www.opentable.ca/r/bar-isabel-toronto
-Relevant elements:
-select 119 TxpENin57omlyGS8c0YB Time selector restProfileSideBartimePickerDtpPicker "5:00 p.m. 5:30 p.m. 6:00 p.m. 6:30 p.m. 7:00 p.m. 7:30 p.m. 8:00 p.m. 8:30 p.m. 9:00 p.m. 9:30 p.m. 10:00 p.m. 10:30 p.m. 11:00 p.m. 11:30 p.m."
-select 114 Party size selector FfVyD58WJTQB9nBaLQRB restProfileSideBarDtpPartySizePicker "1 person 2 people 3 people 4 people 5 people 6 people 7 people 8 people 9 people 10 people 11 people 12 people 13 people 14 people 15 people 16 people 17 people 18 people 19 people 20 people"
-button 121 aria-label="Find a time" "Find a time"
----
-Here are the most relevant elements on the webpage (links, buttons, selects and inputs) to achieve the objective below:
-Objective: email aidan@cohere.com telling him I'm running a few mins late
-URL: https://www.google.com/?gws_rd=ssl
-Relevant elements:
-link 3 "Gmail"
-input 10 gLFyf gsfi q text combobox Search Search
----
-Here are the most relevant elements on the webpage (links, buttons, selects and inputs) to achieve the objective below:
-Objective: buy me a pair of sunglasses from amazon
-URL: https://www.amazon.ca/LUENX-Aviator-Sunglasses-Polarized-Gradient/dp/B08P7HMKJW
-Relevant elements:
-button 153 add-to-cart-button submit.add-to-cart Add to Shopping Cart a-button-input Add to Cart
-button 155 buy-now-button submit.buy-now a-button-input
-select 152 quantity quantity a-native-dropdown a-declarative "1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30"
+prioritization_template = """$examples
 ---
 Here are the most relevant elements on the webpage (links, buttons, selects and inputs) to achieve the objective below:
 Objective: $objective
@@ -104,6 +75,10 @@ URL: $url
 Relevant elements:
 {element}"""
 
+priorit_tmp = ("Objective: {objective}"
+               "\nURL: {url}"
+               "\nRelevant elements:"
+               "\n{elements}")
 user_prompt_end = ("\n\t(success) the goal is accomplished"
                    "\n\t(cancel) terminate the session"
                    "\nType a choice and then press enter:")
@@ -354,18 +329,59 @@ class Controller:
         examples = np.array(examples)[ind]
 
         states = []
-        for i, h in enumerate(history):
-            if i in ind:
-                if all(x in h for x in ["objective", "url", "elements", "previous_commands"]):
-                    states.append(
-                        self._construct_state(objective=h["objective"],
-                                              url=h["url"],
-                                              page_elements=h["elements"],
-                                              previous_commands=h["previous_commands"]))
-                else:
-                    states.append(h["example"])
+        for i in ind:
+            h = history[int(i)]
+            if all(x in h for x in ["objective", "url", "elements", "previous_commands"]):
+                states.append(
+                    self._construct_state(objective=h["objective"],
+                                          url=h["url"],
+                                          page_elements=h["elements"],
+                                          previous_commands=h["previous_commands"]))
+            else:
+                states.append(h["example"])
 
         return states
+
+    def gather_prioritisation_examples(self, state: str, topk: int = 6, num_elements: int = 3) -> List[str]:
+        """Simple semantic search over a file of past interactions to find the most similar ones."""
+        with open("examples.json", "r") as fd:
+            history = json.load(fd)
+
+        if len(history) == 0:
+            return []
+
+        embeds = [h["embedding"] for h in history]
+        examples = [h["example"] for h in history]
+        embeds = np.array(embeds)
+        embedded_state = np.array(self.co.embed(texts=[state], truncate="RIGHT").embeddings[0])
+        scores = np.einsum("i,ji->j", embedded_state,
+                           embeds) / (np.linalg.norm(embedded_state) * np.linalg.norm(embeds, axis=1))
+        ind = np.argsort(scores)[-topk:]
+        examples = np.array(examples)[ind]
+
+        prioritisation_examples = []
+        for i, h in enumerate(history):
+            if i in ind:
+                if all(x in h for x in ["objective", "command", "url", "elements"]):
+                    # make sure the element relevant to the next command is included
+                    elements = h["elements"]
+                    command_element = " ".join(h["command"].split()[1:3])
+                    command_element = list(filter(lambda x: command_element in x, elements))
+                    assert len(command_element) == 1
+                    command_element = command_element[0]
+
+                    if not command_element in elements[:num_elements]:
+                        elements = [command_element] + elements[:-1]
+
+                    elements = elements[:num_elements]
+
+                    objective = h["objective"]
+                    url = h["url"]
+                    elements = '\n'.join(elements)
+                    prioritisation_example = eval(f'f"""{priorit_tmp}"""')
+                    prioritisation_examples.append(prioritisation_example)
+
+        return prioritisation_examples
 
     def _construct_prev_cmds(self, previous_commands: List[str]) -> str:
         return "\n".join(f"{i+1}. {x}" for i, x in enumerate(previous_commands)) if previous_commands else "None"
@@ -499,7 +515,11 @@ class Controller:
         return state, prompt
 
     def _generate_prioritization(self, page_elements: List[str], url: str):
+        state = self._construct_state(self.objective, url, page_elements, self.previous_commands)
+        examples = self.gather_prioritisation_examples(state)
+
         prioritization = prioritization_template
+        prioritization = prioritization.replace("$examples", "\n---\n".join(examples))
         prioritization = prioritization.replace("$objective", self.objective)
         prioritization = prioritization.replace("$url", url)
 
@@ -602,7 +622,6 @@ class Controller:
                                                 stop_sequences=["\n"],
                                                 return_likelihoods="GENERATION").generations,
                                key=lambda x: x.likelihood).text
-                    print(text)
                 except cohere.error.CohereError as e:
                     print(f"Cohere fucked up: {e}")
                     continue
@@ -705,9 +724,9 @@ class Controller:
                 self._error = None
             elif response == "success":
                 self.success()
-                raise self._error
+                raise self._error from None
             elif response == "cancel":
-                raise self._error
+                raise self._error from None
             else:
                 return Prompt("Response not recognized"
                               "\nPlease choose one of the following:"
