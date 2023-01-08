@@ -4,9 +4,9 @@ import re
 from typing import Dict, List
 import cohere
 
-from weblm.basic_controller.utils import (MODEL, DialogueState, Prompt, construct_prompt, construct_state,
-                                          gather_examples, search, shorten_prompt, truncate_left, user_prompt_2,
-                                          user_prompt_3)
+from weblm.controllers.basic.utils import (MODEL, DialogueState, construct_prompt, construct_state, gather_examples,
+                                           search, shorten_prompt, truncate_left, user_prompt_2, user_prompt_3)
+from weblm.utils import Prompt
 
 
 def _get_cmd_prediction(co: cohere.Client, action: str, prompt: str, chosen_element: str) -> str:

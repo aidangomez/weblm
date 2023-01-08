@@ -11,31 +11,34 @@ import time
 from multiprocessing import Pool
 
 import cohere
+import fire
 
-from .basic_controller.controller import Command, Controller, Prompt
+from .controllers import registry
 from .crawler import URL_PATTERN, Crawler
+from .utils import Prompt, Command
 
 co = cohere.Client(os.environ.get("COHERE_KEY"), check_api_key=False)
 
-if (__name__ == "__main__"):
 
-    def reset():
-        _crawler = Crawler()
+def reset(controller):
+    _crawler = Crawler()
 
-        def print_help():
-            print("(g) to visit url\n(u) scroll up\n(d) scroll dow\n(c) to click\n(t) to type\n" +
-                  "(h) to view commands again\n(r) to run suggested command\n(o) change objective")
+    def print_help():
+        print("(g) to visit url\n(u) scroll up\n(d) scroll dow\n(c) to click\n(t) to type\n" +
+              "(h) to view commands again\n(r) to run suggested command\n(o) change objective")
 
-        objective = "Make a reservation for 2 at 7pm at bistro vida in menlo park"
-        print("\nWelcome to WebLM! What is your objective?")
-        i = input()
-        if len(i) > 0:
-            objective = i
+    objective = "Make a reservation for 2 at 7pm at bistro vida in menlo park"
+    print("\nWelcome to WebLM! What is your objective?")
+    i = input()
+    if len(i) > 0:
+        objective = i
 
-        _controller = Controller(co, objective)
-        return _crawler, _controller
+    _controller = registry.get(controller)(co, objective)
+    return _crawler, _controller
 
-    crawler, controller = reset()
+
+def main(controller="basic"):
+    crawler, controller = reset(controller)
 
     response = None
     content = []
@@ -43,7 +46,7 @@ if (__name__ == "__main__"):
     while True:
         if response == "cancel":
             controller.save_responses()
-            # crawler, controller = reset()
+            # crawler, controller = reset(controller)
         elif response == "success":
             controller.success()
             controller.save_responses()
@@ -69,3 +72,7 @@ if (__name__ == "__main__"):
             response = None
         elif isinstance(response, Prompt):
             response = input(str(response))
+
+
+if (__name__ == "__main__"):
+    fire.Fire(main)

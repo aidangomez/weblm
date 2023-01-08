@@ -3,9 +3,9 @@
 from typing import List
 import cohere
 
-from weblm.basic_controller.utils import (MAX_SEQ_LEN, TYPEABLE, CLICKABLE, DialogueState, Prompt, choose,
-                                          construct_prompt, construct_state, gather_examples, shorten_prompt,
-                                          user_prompt_1)
+from weblm.controllers.basic.utils import (MAX_SEQ_LEN, TYPEABLE, CLICKABLE, DialogueState, choose, construct_prompt,
+                                           construct_state, gather_examples, shorten_prompt, user_prompt_1)
+from weblm.utils import Prompt
 
 
 def pick_action(co: cohere.Client,

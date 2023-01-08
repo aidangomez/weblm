@@ -5,7 +5,7 @@ import numpy as np
 import cohere
 import json
 
-from weblm.basic_controller.utils import construct_state, choose
+from weblm.controllers.basic.utils import construct_state, choose
 
 prioritization_template = """$examples
 ---

@@ -1,4 +1,4 @@
-"""Misc. utility function"""
+"""Misc. utility functions"""
 
 from concurrent.futures import ThreadPoolExecutor
 from enum import Enum
@@ -68,24 +68,6 @@ class DialogueState(Enum):
     ActionFeedback = "action from feedback"
     Command = "suggest command"
     CommandFeedback = "command from feedback"
-
-
-class Prompt:
-
-    def __init__(self, prompt: str) -> None:
-        self.prompt = prompt
-
-    def __str__(self) -> str:
-        return self.prompt
-
-
-class Command:
-
-    def __init__(self, cmd: str) -> None:
-        self.cmd = cmd
-
-    def __str__(self) -> str:
-        return self.cmd
 
 
 def truncate_left(tokenize, prompt, *rest_of_prompt, limit=2048):

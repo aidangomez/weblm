@@ -6,11 +6,12 @@ from collections import defaultdict
 from typing import DefaultDict, Dict, List, Tuple, Union
 
 import cohere
-from weblm.basic_controller.pick_command import generate_command
-from weblm.basic_controller.prioritize import generate_prioritization
-from weblm.basic_controller.pick_action import pick_action
-from weblm.basic_controller.utils import (CLICKABLE, MAX_NUM_ELEMENTS, TYPEABLE, Command, DialogueState, Prompt,
-                                          construct_state, search, shorten_prompt, user_prompt_end)
+from weblm.controllers.basic.pick_command import generate_command
+from weblm.controllers.basic.prioritize import generate_prioritization
+from weblm.controllers.basic.pick_action import pick_action
+from weblm.controllers.basic.utils import (CLICKABLE, MAX_NUM_ELEMENTS, TYPEABLE, DialogueState, construct_state,
+                                           search, shorten_prompt, user_prompt_end)
+from weblm.utils import Command, Prompt
 
 help_msg = """Welcome to WebLM!
 
