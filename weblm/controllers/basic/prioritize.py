@@ -1,5 +1,6 @@
 """The goal of Prioritization is to sort and filter the elements on a webpage so that the *most relevant* elements to the objective at hand are shown to the model."""
 
+import random
 from typing import List
 import numpy as np
 import cohere
@@ -36,21 +37,22 @@ def gather_prioritisation_examples(co: cohere.Client, state: str, topk: int = 6,
     scores = np.einsum("i,ji->j", embedded_state,
                        embeds) / (np.linalg.norm(embedded_state) * np.linalg.norm(embeds, axis=1))
     ind = np.argsort(scores)[-topk:]
-    examples = np.array(examples)[ind]
 
-    prioritisation_examples = []
+    ind = ind.tolist()
+    prioritisation_examples = [None] * len(ind)
     for i, h in enumerate(history):
         if i in ind:
             if all(x in h for x in ["objective", "command", "url", "elements"]):
                 # make sure the element relevant to the next command is included
-                elements = h["elements"]
+                elements = list(filter(lambda x: x[:4] != "text", h["elements"]))
                 command_element = " ".join(h["command"].split()[1:3])
                 command_element = list(filter(lambda x: command_element in x, elements))
-                assert len(command_element) == 1
+                assert len(command_element) == 1, f"length is {len(command_element)}"
                 command_element = command_element[0]
 
                 if not command_element in elements[:num_elements]:
-                    elements = [command_element] + elements[:-1]
+                    rand_idx = random.randint(0, num_elements - 1)
+                    elements = elements[:rand_idx] + [command_element] + elements[rand_idx:]
 
                 elements = elements[:num_elements]
 
@@ -58,9 +60,9 @@ def gather_prioritisation_examples(co: cohere.Client, state: str, topk: int = 6,
                 url = h["url"]
                 elements = '\n'.join(elements)
                 prioritisation_example = eval(f'f"""{priorit_tmp}"""')
-                prioritisation_examples.append(prioritisation_example)
+                prioritisation_examples[ind.index(i)] = prioritisation_example
 
-    return prioritisation_examples
+    return list(filter(lambda x: x is not None, prioritisation_examples))
 
 
 def generate_prioritization(co: cohere.Client, objective: str, page_elements: List[str], url: str,
@@ -72,6 +74,8 @@ def generate_prioritization(co: cohere.Client, objective: str, page_elements: Li
     prioritization = prioritization.replace("$examples", "\n---\n".join(examples))
     prioritization = prioritization.replace("$objective", objective)
     prioritization = prioritization.replace("$url", url)
+
+    print(prioritization)
 
     prioritized_elements = choose(co, prioritization, [{"element": x} for x in page_elements], topk=len(page_elements))
     prioritized_elements = [x[1]["element"] for x in prioritized_elements]

@@ -45,6 +45,7 @@ def pick_action(co: cohere.Client,
             ], topk=2)
 
             # if the model is confident enough, just assume the suggested action is correct
+            print("confidence: ", (action[0][0] - action[1][0]) / -action[1][0])
             if (action[0][0] - action[1][0]) / -action[1][0] > 1.:
                 action = action[0][1]["action"]
             else:

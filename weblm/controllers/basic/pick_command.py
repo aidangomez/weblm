@@ -5,7 +5,7 @@ from typing import Dict, List
 import cohere
 
 from weblm.controllers.basic.utils import (MODEL, DialogueState, construct_prompt, construct_state, gather_examples,
-                                           search, shorten_prompt, truncate_left, user_prompt_2, user_prompt_3)
+                                           shorten_prompt, truncate_left, user_prompt_2, user_prompt_3, choose_element)
 from weblm.utils import Prompt
 
 
@@ -59,17 +59,18 @@ def generate_command(co: cohere.Client,
             state = construct_state(objective, url, ["$elements"], previous_commands)
             prompt = construct_prompt(state, examples)
 
-            state, prompt = shorten_prompt(objective, url, ["$elements"], previous_commands, examples, action)
+            state, prompt = shorten_prompt(co, objective, url, ["$elements"], previous_commands, examples, action)
 
             group_size = 20
-            chosen_elements = self.choose_element(
-                prompt + action + "{id}",
-                list(map(lambda x: {
-                    "id": " " + " ".join(x.split(" ")[:2]),
-                    "elements": x
-                }, pruned_elements)),
-                group_size,
-                topk=5)
+            chosen_elements = choose_element(co,
+                                             prompt + action + "{id}",
+                                             list(
+                                                 map(lambda x: {
+                                                     "id": " " + " ".join(x.split(" ")[:2]),
+                                                     "elements": x
+                                                 }, pruned_elements)),
+                                             group_size,
+                                             topk=5)
             chosen_element = chosen_elements[0]["id"]
 
             state = construct_state(objective, url, pruned_elements, previous_commands)

@@ -5,12 +5,13 @@ from enum import Enum
 import itertools
 import json
 import math
+import random
 from typing import Any, Dict, List, Tuple
 import cohere
 import numpy as np
 
 MAX_SEQ_LEN = 2000
-MAX_NUM_ELEMENTS = 50
+MAX_NUM_ELEMENTS = 30
 TYPEABLE = ["input", "select"]
 CLICKABLE = ["link", "button"]
 MODEL = "xlarge"
@@ -136,13 +137,13 @@ def construct_state(objective: str, url: str, page_elements: List[str], previous
 
 def construct_prompt(state: str, examples: List[str]) -> str:
     prompt = prompt_template
-    prompt = prompt.replace("$examples", "\n\n".join(examples))
+    prompt = prompt.replace("$examples", "Example:\n" + "\n\nExample:\n".join(examples))
     return prompt.replace("$state", state)
 
 
 def _fn(x):
     if len(x) == 3:
-        option, prompt, self = x
+        option, prompt, co = x
         return_likelihoods = "ALL"
     elif len(x) == 4:
         option, prompt, co, return_likelihoods = x
@@ -150,7 +151,7 @@ def _fn(x):
     while True:
         try:
             if len(co.tokenize(prompt)) > 2048:
-                prompt = truncate_left(self.co.tokenize, prompt)
+                prompt = truncate_left(co.tokenize, prompt)
             return (co.generate(prompt=prompt, max_tokens=0, model=MODEL,
                                 return_likelihoods=return_likelihoods).generations[0].likelihood, option)
         except cohere.error.CohereError as e:
@@ -182,98 +183,6 @@ def choose(co: cohere.Client,
             zip(options, [template.format(**option) for option in options], [co] * num_options,
                 [return_likelihoods] * num_options))
     return sorted(_lh, key=lambda x: x[0], reverse=True)[:topk]
-
-
-def shorten_prompt(co: cohere.Client,
-                   objective: str,
-                   url: str,
-                   elements: List[str],
-                   previous_commands: List[str],
-                   examples: List[str],
-                   *rest_of_prompt,
-                   target: int = MAX_SEQ_LEN):
-    state = construct_state(objective, url, elements, previous_commands)
-    prompt = construct_prompt(state, examples)
-
-    tokenized_prompt = co.tokenize(prompt + "".join(rest_of_prompt))
-    tokens = tokenized_prompt.token_strings
-
-    split_tokens = split_list_by_separators(tokens,
-                                            [['EX', 'AMP', 'LE'], ["Example"], ["Present", " state", ":", "\n"]])
-    example_tokens = split_tokens[1:-1]
-    length_of_examples = list(map(len, example_tokens))
-    state_tokens = split_tokens[-1]
-    state_tokens = list(
-        itertools.chain.from_iterable(
-            split_list_by_separators(state_tokens, [['----', '----', '----', '----', '--', '\n']])[1:-1]))
-    state_tokens = split_list_by_separators(state_tokens, [["\n"]])
-    length_of_elements = list(map(len, state_tokens))
-    length_of_prompt = len(tokenized_prompt)
-
-    def _fn(i, j):
-        state = construct_state(objective, url, elements[:len(elements) - i], previous_commands)
-        prompt = construct_prompt(state, examples[j:])
-
-        return state, prompt
-
-    MIN_EXAMPLES = 1
-    i, j = (0, 0)
-    while (length_of_prompt - sum(length_of_examples)) + sum(
-            length_of_examples[j:]) > target and j < len(examples) - MIN_EXAMPLES:
-        j += 1
-
-    print(f"num examples: {len(examples) - j}")
-
-    state, prompt = _fn(i, j)
-    if len(co.tokenize(prompt + "".join(rest_of_prompt))) <= target:
-        return state, prompt
-
-    MIN_ELEMENTS = 7
-    while (length_of_prompt - sum(length_of_examples[:j]) - sum(length_of_elements)) + sum(
-            length_of_elements[:len(length_of_elements) - i]) > target and i < len(elements) - MIN_ELEMENTS:
-        i += 1
-
-    print(f"num elements: {len(length_of_elements) - i}")
-
-    state, prompt = _fn(i, j)
-
-    # last resort, start cutting off the bigging of the prompt
-    if len(co.tokenize(prompt + "".join(rest_of_prompt))) > target:
-        prompt = truncate_left(co.tokenize, prompt, *rest_of_prompt, limit=target)
-
-    return state, prompt
-
-
-def gather_examples(co: cohere.Client, state: str, topk: int = 5) -> List[str]:
-    """Simple semantic search over a file of past interactions to find the most similar ones."""
-    with open("examples.json", "r") as fd:
-        history = json.load(fd)
-
-    if len(history) == 0:
-        return []
-
-    embeds = [h["embedding"] for h in history]
-    examples = [h["example"] for h in history]
-    embeds = np.array(embeds)
-    embedded_state = np.array(co.embed(texts=[state], truncate="RIGHT").embeddings[0])
-    scores = np.einsum("i,ji->j", embedded_state,
-                       embeds) / (np.linalg.norm(embedded_state) * np.linalg.norm(embeds, axis=1))
-    ind = np.argsort(scores)[-topk:]
-    examples = np.array(examples)[ind]
-
-    states = []
-    for i in ind:
-        h = history[int(i)]
-        if all(x in h for x in ["objective", "url", "elements", "previous_commands"]):
-            states.append(
-                construct_state(objective=h["objective"],
-                                url=h["url"],
-                                page_elements=h["elements"],
-                                previous_commands=h["previous_commands"]))
-        else:
-            states.append(h["example"])
-
-    return states
 
 
 def choose_element(co: cohere.Client,
@@ -319,3 +228,112 @@ def choose_element(co: cohere.Client,
         return choices
     else:
         return choose_element(co, template, choices, group_size, topk)
+
+
+def shorten_prompt(co: cohere.Client,
+                   objective: str,
+                   url: str,
+                   elements: List[str],
+                   previous_commands: List[str],
+                   examples: List[str],
+                   *rest_of_prompt,
+                   target: int = MAX_SEQ_LEN):
+    state = construct_state(objective, url, elements, previous_commands)
+    prompt = construct_prompt(state, examples)
+
+    tokenized_prompt = co.tokenize(prompt + "".join(rest_of_prompt))
+    tokens = tokenized_prompt.token_strings
+
+    split_tokens = split_list_by_separators(
+        tokens, [['EX', 'AMP', 'LE'], ["Example", ":", "\n"], ["Example"], ["Present", " state", ":", "\n"]])
+    example_tokens = split_tokens[1:-1]
+    length_of_examples = list(map(len, example_tokens))
+    state_tokens = split_tokens[-1]
+    state_tokens = list(
+        itertools.chain.from_iterable(
+            split_list_by_separators(state_tokens, [['----', '----', '----', '----', '--', '\n']])[1:-1]))
+    state_tokens = split_list_by_separators(state_tokens, [["\n"]])
+    length_of_elements = list(map(len, state_tokens))
+    length_of_prompt = len(tokenized_prompt)
+
+    def _fn(i, j):
+        state = construct_state(objective, url, elements[:len(elements) - i], previous_commands)
+        prompt = construct_prompt(state, examples[j:])
+
+        return state, prompt
+
+    MIN_EXAMPLES = 1
+    i, j = (0, 0)
+    while (length_of_prompt - sum(length_of_examples)) + sum(
+            length_of_examples[j:]) > target and j < len(examples) - MIN_EXAMPLES:
+        print(length_of_prompt, sum(length_of_examples), sum(length_of_examples[j:]))
+        print(length_of_prompt - sum(length_of_examples) + sum(length_of_examples[j:]))
+        j += 1
+
+    print(f"num examples: {len(examples) - j}")
+
+    state, prompt = _fn(i, j)
+    if len(co.tokenize(prompt + "".join(rest_of_prompt))) <= target:
+        return state, prompt
+
+    MIN_ELEMENTS = 7
+    while (length_of_prompt - sum(length_of_examples[:j]) - sum(length_of_elements)) + sum(
+            length_of_elements[:len(length_of_elements) - i]) > target and i < len(elements) - MIN_ELEMENTS:
+        i += 1
+
+    print(f"num elements: {len(length_of_elements) - i}")
+
+    state, prompt = _fn(i, j)
+
+    # last resort, start cutting off the bigging of the prompt
+    if len(co.tokenize(prompt + "".join(rest_of_prompt))) > target:
+        prompt = truncate_left(co.tokenize, prompt, *rest_of_prompt, limit=target)
+
+    return state, prompt
+
+
+def gather_examples(co: cohere.Client, state: str, topk: int = 5, max_elements: int = 10) -> List[str]:
+    """Simple semantic search over a file of past interactions to find the most similar ones."""
+    with open("examples.json", "r") as fd:
+        history = json.load(fd)
+
+    if len(history) == 0:
+        return []
+
+    embeds = [h["embedding"] for h in history]
+    examples = [h["example"] for h in history]
+    embeds = np.array(embeds)
+    embedded_state = np.array(co.embed(texts=[state], truncate="RIGHT").embeddings[0])
+    scores = np.einsum("i,ji->j", embedded_state,
+                       embeds) / (np.linalg.norm(embedded_state) * np.linalg.norm(embeds, axis=1))
+    ind = np.argsort(scores)[::-1]
+
+    states = []
+    for i in ind:
+        if len(states) == topk:
+            break
+
+        h = history[int(i)]
+        if all(x in h for x in ["objective", "url", "elements", "previous_commands", "command"]):
+            elements = list(filter(lambda x: x[:4] != "text", h["elements"]))
+
+            command_element = " ".join(h["command"].split()[1:3])
+            command_element = list(filter(lambda x: command_element in x, elements))
+            assert len(command_element) == 1, f"length is {len(command_element)}"
+            command_element = command_element[0]
+
+            if not command_element in elements[:max_elements]:
+                rand_idx = random.randint(0, max_elements - 1)
+                elements = elements[:rand_idx] + [command_element] + elements[rand_idx:]
+
+            elements = elements[:max_elements]
+
+            state = construct_state(objective=h["objective"],
+                                    url=h["url"],
+                                    page_elements=elements,
+                                    previous_commands=h["previous_commands"])
+            state += f"\nNext Command: {h['command']}"
+
+            states.append(state)
+
+    return states

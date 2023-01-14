@@ -1,4 +1,5 @@
 import csv
+from datetime import datetime
 import json
 import os
 import re
@@ -10,29 +11,8 @@ from weblm.controllers.basic.pick_command import generate_command
 from weblm.controllers.basic.prioritize import generate_prioritization
 from weblm.controllers.basic.pick_action import pick_action
 from weblm.controllers.basic.utils import (CLICKABLE, MAX_NUM_ELEMENTS, TYPEABLE, DialogueState, construct_state,
-                                           search, shorten_prompt, user_prompt_end)
-from weblm.utils import Command, Prompt
-
-help_msg = """Welcome to WebLM!
-
-The goal of this project is build a system that takes an objective from the user, and operates a browser to carry it out.
-
-For example:
-- book me a table for 2 at bar isabel next wednesday at 7pm
-- i need a flight from SF to London on Oct 15th nonstop
-- buy me more whitening toothpaste from amazon and send it to my apartment
-
-WebLM learns to carry out tasks *by demonstration*. That means that you'll need to guide it and correct it when it goes astray. Over time, the more people who use it, the more tasks it's used for, WebLM will become better and better and rely less and less on user input.
-
-To control the system:
-- You can see what the model sees at each step by looking at the list of elements the model can interact with
-- show: You can also see a picture of the browser window by typing `show`
-- goto: You can go to a specific webpage by typing `goto www.yourwebpage.com`
-- success: When the model has succeeded at the task you set out (or gotten close enough), you can teach the model by typing `success` and it will save it's actions to use in future interations
-- cancel: If the model is failing or you made a catastrophic mistake you can type `cancel` to kill the session
-- help: Type `help` to show this message
-
-Everytime you use WebLM it will improve. If you want to contribute to the project and help us build join the discord (https://discord.com/invite/co-mmunity) or send an email to weblm@cohere.com"""
+                                           search, shorten_prompt, user_prompt_end, gather_examples)
+from weblm.utils import Command, Prompt, HELP_MSG
 
 
 class Controller:
@@ -104,6 +84,7 @@ class Controller:
             "command": command,
             "previous_commands": previous_commands,
             "objective": objective,
+            "datetime": datetime.now().isoformat(),
         })
 
         with open("examples_tmp.json", "w") as fd:
@@ -188,9 +169,11 @@ class Controller:
                     filter(lambda x: any(x.startswith(y) for y in TYPEABLE), self._pruned_prioritized_elements))
 
             if response == "prompt":
+                state = construct_state(self.objective, url, self._pruned_prioritized_elements, self.previous_commands)
+                examples = gather_examples(self.co, state)
                 chosen_element = self._chosen_elements[0]["id"]
-                _, prompt = shorten_prompt(self.objective, url, pruned_elements, self.previous_commands, examples,
-                                           self._action, chosen_element)
+                _, prompt = shorten_prompt(self.co, self.objective, url, pruned_elements, self.previous_commands,
+                                           examples, self._action, chosen_element)
                 return Prompt(f"{prompt}\n\nPlease respond with 'y' or 's'")
             elif response == "elements":
                 return Prompt("\n".join(str(d) for d in self._chosen_elements))
