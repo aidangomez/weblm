@@ -1,5 +1,9 @@
 specials.json
+<<<<<<< HEAD
+generate_emails/
+=======
 examples.json
 */__pycache__
 poetry.lock
 screenshot.png
+>>>>>>> 21dc9f16b700ccca313a4a90f0ddbe780c607029

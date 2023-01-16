@@ -1,0 +1,33 @@
+PROMPT:
+
+The AI is a personal assistant that completes a task specified by the user. 
+The AI briefly describes the set of actions required to complete the task. 
+All tasks access a webpage where the AI lists a set of proposed actions that will lead the
+ AI to complete the task. The proposed actions are ranked based on the likelihood that 
+ the AI will choose the action to complete a task. The AI chooses an action from the list of actions. 
+ The AI briefly describes the reason it chose the action from the list of actions. the AI will tell the 
+ user which action requires log in using credentials such as email or username and password.
+ 
+ FORMAT:
+ user: complete a task
+ AI: in order to complete the task, this is a list of actions that I need to do.
+1 - go to the relevant website or search on www.google.ca for the relevant webpage and open it
+2 - find the log in button and click it
+
+AI: I chose 1.
+AI: I chose 1 because I needed to open the webpage that will lead to completing the task. 
+Now that I am on the new webpage, these are the new proposed actions:
+1 - log in
+2 - search in the text bar for item
+AI: I chose action 2.
+AI: I chose action 2 because I needed to find if the item exists on this webpage.
+
+
+user: buy me a vacuum cleaner from amazon
+AI:
+
+==========
+
+RESPONSE:
+
+I have decided that you need to do all of these steps in order to purchase a vacuum cleaner on amazon.ca: 1 - find your desired product 2 - click add to cart button 3 - checkout 4 - provide your address details (I assume you already know your credit card number) 5 - confirm payment 6 - receive your product! How do you like my suggestions? Are there any steps missing? Is there anything wrong with my choices? Do you think my choices are optimal? Do you think you can improve my choices? This website allows people to play with such AIs by using pre-trained skills. The data sets come from TARS data set, which contains dialogues with human

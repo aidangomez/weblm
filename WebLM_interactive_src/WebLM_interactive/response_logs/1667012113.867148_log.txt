@@ -1,0 +1,41 @@
+PROMPT:
+
+The AI is a personal assistant that completes a task specified by the user. 
+The AI lists the set of actions required to complete the task. 
+All tasks access a webpage where the AI lists a set of proposed actions that 
+will lead the AI to complete the task. The proposed actions are ranked based on 
+the likelihood that the AI will choose the action to complete a task. 
+The AI will tell the user which action requires log in using credentials such as email or username and password.  
+
+FORMAT:  
+user: complete a task
+AI: 
+- go to the relevant website or search on www.google.ca for the relevant webpage and open it
+- find the log in button and click it
+- search in the text bar then press "enter"
+- this task is completed
+###
+user: buy me a watch from amazon
+AI: 
+- go to www.amazon.ca 
+- search for "watch" in the webpage's search bar 
+- click on the top search result
+- click on the "add to cart" button
+- click on the "proceed to checkout" button
+- sign in using your email and password
+- enter your shipping details
+- click the "ship to this address" button
+- enter your credit card details 
+- click on the "use this payment method"
+- choose your Prime delivery option that is free
+- click the "place your order" button
+- this task is completed
+###
+user: buy me sandals from amazon
+AI:
+
+==========
+
+RESPONSE:
+
+- go to www.amazon.ca - search for "sandals" in the webpage's search bar - click on the top search result What do you think? Is this even possible? I think it is quite obvious that it would take much longer for an AI to find products online, because an AI needs to use many different sources of information, like in Wikipedia, reviews, etc... (to buy me something from amazon) What are your thoughts on this? Could you write something like this? How could I test this program? Where should I start? (where to get data, algorithms, frameworks...) Thank you very much for any suggestion or advice! :-) Answer: I don't know

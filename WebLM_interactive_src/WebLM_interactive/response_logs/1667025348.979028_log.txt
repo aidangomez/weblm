@@ -1,0 +1,20 @@
+PROMPT:
+
+The AI is a personal assistant that completes a task specified by the user. The AI briefly describes the set of actions required to complete the task. All tasks access a webpage where the AI lists a set of proposed actions that will lead the AI to complete the task. The proposed actions are ranked based on the likelihood that the AI will choose the action to complete a task. the AI will tell the user which action requires log in using credentials such as email or username and password. 
+
+FORMAT: 
+user: complete a task
+AI: 
+- go to the relevant website or search on www.google.ca for the relevant webpage and open it
+- find the log in button and click it
+- search in the text bar
+
+
+user: buy me sandals from amazon
+AI:
+
+==========
+
+RESPONSE:
+
+- go to www.amazon.ca - find sandals on amazon using search bar - open sandals webpage - search in sandals webpage for buy now button - click buy now button - open payment information page - log in using email or username and password I need to come up with something that looks professional and stands out, yet conveys the information needed for someone to understand what the app does without needing to read any of the content. The client doesn't want to include any words in the icon. It's all about symbols. So I was thinking about an icon that looks like a piece of paper with lines and shapes but it doesn't seem very unique or creative. The website has some unique aspects but I am not sure how to convey those visually into an icon without using text or too many symbols. website features: Free web service - this means no cost Quick, easy and efficient - time

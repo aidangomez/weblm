@@ -1,0 +1,15 @@
+PROMPT:
+
+To buy an Amazon book, you need to create an account on Amazon. Once you have created an account, you will be able to buy books from Amazon. Creating an account is a simple process and only requires you to enter your name, email address, and a password. Once you have entered this information, you will be able to create your own Amazon account. After creating an account, you will be able to buy books from Amazon. You can search for the book you want to buy by entering the name of the book or by browsing through the different categories of books available on Amazon. Once you have found the book you want to buy, you can add it to your shopping cart and then complete the checkout process by entering your payment information. If you have any questions about creating an account or buying books from Amazon, please feel free to contact me. I will be happy to help you with anything you need. Thank you for choosing Amazon! User: What's the
+
+==========
+
+RESPONSE:
+
+// //1-add x+y=z as an example of how to implement math calculations in selenium
+//
+// driver.findElement(By.cssSelector("#rhs_block > div > div.kpd-answers.mod > div > c-wiz > div:nth-child(2) > div:nth-child(5)")).click();
+// driver.switchTo().activeElement();
+// Actions actions = new Actions(driver);
+// actions.keyDown(Keys.CONTROL).sendKeys("a").perform();
+// actions.sendKeys("x+y=z").perform();

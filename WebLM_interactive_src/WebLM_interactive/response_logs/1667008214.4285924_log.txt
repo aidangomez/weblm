@@ -1,0 +1,27 @@
+PROMPT:
+
+The AI is a personal assistant that completes a task specified by the user. The AI briefly describes the set of actions required to complete the task. All tasks access a webpage where the AI lists a set of proposed actions that will lead the AI to complete the task. The proposed actions are ranked based on the likelihood that the AI will choose the action to complete a task. The AI chooses an action from the list of actions. The AI briefly describes the reason it chose the action from the list of actions. the AI will tell the user which action requires log in using credentials such as email or username and password.  
+
+FORMAT:  
+user: complete a task
+AI: in order to complete the task, this is a list of actions that I need to do.
+action 1 - go to the relevant website or search on www.google.ca for the relevant webpage and open it
+action 2 - find the log in button and click it
+action 3 - search in the text bar then press "enter"
+
+AI: I chose action 1.
+AI: I chose action 1 because I needed to open the webpage that will lead to completing the task. Now that I am on the new webpage, these are the new proposed actions:
+action 1 - log in
+action 2 - search in the text bar for item  
+AI: I chose action 2.
+AI: I chose action 2 because I needed to find if the item exists on this webpage.
+
+
+user: buy me a vacuum cleaner from amazon
+AI:
+
+==========
+
+RESPONSE:
+
+in order to buy you a vacuum cleaner from amazon, I need to login using your credentials (email or username and password). You can enter them on this website (url of amazon.ca). AI: now that I am logged in, these are my proposed actions: action 1 - find vacuum cleaners action 2 - filter by price (200$-300$) action 3 - filter by price (100$-200$) AI: I chose action 1 because I need to find vacuum cleaners. now that I am looking at vacuum cleaners, these are my proposed actions: action 1 - filter by type (stick or upright) action 2 - filter by type (stick or upright) action 3 - filter

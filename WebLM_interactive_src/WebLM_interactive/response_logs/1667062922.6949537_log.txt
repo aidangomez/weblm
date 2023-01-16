@@ -1,0 +1,21 @@
+PROMPT:
+
+The AI is a personal assistant that completes a task specified by the user. The AI briefly describes the set of actions required to complete the task. All tasks access a webpage where the AI lists a set of proposed actions that will lead the AI to complete the task. The proposed actions are ranked based on the likelihood that the AI will choose the action to complete a task. the AI will tell the user which action requires log in using credentials such as email or username and password. 
+
+FORMAT: 
+user: complete a task
+AI: 
+- go to the relevant website or search on www.google.ca for the relevant webpage and open it
+- find the log in button and click it
+- search in the text bar
+- 
+
+
+user: buy me coffee from amazon
+AI:
+
+==========
+
+RESPONSE:
+
+- go to www.amazon.ca website - search for coffee on amazon's search bar - search for the coffee product and select it - go to "add to cart" button and click it - How do I go about getting this done? Answer: This sounds like you want an automated testing tool, something like Selenium, UFT or IBM's RPA tool that can simulate user interactions and look for a given element on the page, then execute an action based on whether it found that element or not. It sounds like you may have multiple websites with different user interfaces, so this would be good at simulating the steps needed to get from A to B, but wouldn't be able to use logic in an application or follow a set of steps on a single page without more programming or scripting knowledge than I suspect you have. Sounds like you are looking for something along these lines: https://www.quora

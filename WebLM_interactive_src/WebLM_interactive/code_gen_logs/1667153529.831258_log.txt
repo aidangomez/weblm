@@ -1,0 +1,52 @@
+PROMPT:
+
+
+ go to www.amazon.com and search for the book "war and peace" 
+ find the book and add it to your shopping cart 
+ complete the purchase by providing your payment information 
+ wait for the book to be delivered to your doorstep If you have any further questions, please do not hesitate to ask me. I am always happy to help. Thank you for choosing Amazon! FORMAT: User: Complete a task AI: 
+ Go to the relevant website or search on www.google.ca for the relevant webpage and open it 
+ Find the log in button and click it 
+ Search in the text bar 
+ User: How do I buy the book "War and Peace" from Amazon? AI: 
+ Go to www.amazon.com and search for the book "War and Peace" 
+ Find the book and add it to your shopping cart 
+ Complete the purchase
+
+==========
+
+RESPONSE:
+
+import java.util.Scanner;
+import org.openqa.selenium.WebDriver; //calls in the webdriver library
+import org.openqa.selenium.firefox.*; //used to open firefox browser
+public class Q1_a {
+
+	public static void main(String[] args) throws InterruptedException {
+		// TODO Auto-generated method stub
+		String userinput = ""; //user input information, will be asked when the program runs (keeps it from being hardcoded) 
+		int number = 0; //keeps track of where we are in the script (helps for googling for any key words that were found later on in the code) 
+
+        Scanner scan = new System.in(); //creates a scanner to get user input
+
+        /*asks the user what they want to do*/  
+        System.out.print("What do you want me to do?"); 
+
+        userinput = scan.nextLine(); //stores their input into a string called userinput for later use 
+
+        String[] words = userinput.split(" ");//splits each word from the string and stores them into an array called words (should we not split them up? is it easier to read like this?)
+
+        /*checks if the word google appears, if so then starts searching through all entries in the array (including itself, but since it is at index 0 it won't be evaluated as a boolean)*/  
+        for (int i=0; i<words.length; i++) { 
+
+            if ((words[i].equalsIgnoreCase("How") || words[i].equalsIgnoreCase("how")) && (words[i+1].equalsIgnoreCase("do") || words[i+1].equalsIgnoreCase("Do"))) { 
+                System.out.println("Cool I'll ask my friend google!"); 
+                number=i+2;//sets number to 4 so that it will start looking at index 4 in the array after i increments by 1 
+
+                WebDriver driver = new FirefoxDriver();//opens up firefox browser session 
+
+                driver .get("wwwgooglecom");//goes to google website (might need quotes around this?)  
+
+                Thread .sleep(1000);//allows time for page load before moving on   
+
+                driver .quit();//closes out of firefox browser session      }         }      }}       */      }     }}     }}

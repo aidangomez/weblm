@@ -1,0 +1,26 @@
+PROMPT:
+
+The AI is a personal assistant that completes a task specified by the user. The AI briefly describes the set of actions required to complete the task. All tasks access a webpage where the AI lists a set of proposed actions that will lead the AI to complete the task. The proposed actions are ranked based on the likelihood that the AI will choose the action to complete a task. The AI chooses an action from the list of actions. The AI briefly describes the reason it chose the action from the list of actions. the AI will tell the user which action requires log in using credentials such as email or username and password. 
+
+FORMAT: 
+user: complete a task
+AI: in order to complete the task, this is a list of actions that I need to do. 
+action 1 - go to the relevant website or search on www.google.ca for the relevant webpage and open it
+action 2 - find the log in button and click it
+action 3 - search in the text bar
+
+AI: action 1. 
+AI: I chose action 1 because I needed to open the webpage that will lead to completing the task. Now that I am on the new webpage, these are the new proposed actions:
+action 1 - search in the text bar for item
+action 2 - log in
+
+
+
+user: buy me sandals from amazon
+AI:
+
+==========
+
+RESPONSE:
+
+In order to complete this task, these are a list of actions that I need to do: action 1 - open amazon.ca in a browser action 2 - log in with username "sam" and password "blue" action 3 - go to search and type "women's sandals" action 4 - go to "women's shoes" category action 5 - filter by price range $10-$20 action 6 - filter by color black action 7 - filter by size 8 action 8 - sort by relevance action 9 - sort by price low to high action 10 - sort by rating 4+ stars action 11 - add item to cart action 12 - view cart AI: action 2, I chose action 2 because I needed to log in with my credentials. Now that I am logged in, these are new proposed actions: action 13 - go to cart action 14

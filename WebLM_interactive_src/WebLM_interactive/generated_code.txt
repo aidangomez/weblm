@@ -1,0 +1,7 @@
+// //1-add x+y=z as an example of how to implement math calculations in selenium
+//
+// driver.findElement(By.cssSelector("#rhs_block > div > div.kpd-answers.mod > div > c-wiz > div:nth-child(2) > div:nth-child(5)")).click();
+// driver.switchTo().activeElement();
+// Actions actions = new Actions(driver);
+// actions.keyDown(Keys.CONTROL).sendKeys("a").perform();
+// actions.sendKeys("x+y=z").perform();

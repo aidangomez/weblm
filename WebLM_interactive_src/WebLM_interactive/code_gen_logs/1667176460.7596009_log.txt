@@ -1,0 +1,41 @@
+PROMPT:
+
+
+ go to Amazon.com and search for the book of Repay 
+ find the product page for the book of Repay and open it 
+ read the product description and customer reviews 
+ click the "Add to Cart" button 
+ enter your shipping address and payment information 
+ click the "Place Order" button 
+ wait for your order to be shipped to you 
+ If you have any problems or questions, please contact customer service. I hope you enjoy your purchase! FORMAT: User: Complete a task AI: 
+ Go to the relevant website or search on www.google.ca for the relevant webpage and open it 
+ Find the log in button and click it 
+ Search in the text bar 
+ User: Show me the steps to buy the book of Repay from Amazon. AI: 
+ Go to Amazon.com and search for the book of Repay 
+
+
+==========
+
+RESPONSE:
+
+from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
+
+
+# 1. Go to Amazon.com and search for the book of Repay 
+# 2. find the product page for the book of Repay and open it 
+# 3. read the product description and customer reviews 
+# 4. click the "Add to Cart" button 
+# 5. enter your shipping address and payment information 
+
+        
+driver = webdriver.Firefox() # Chrome(), PhantomJS(), Firefox() etc...    it also accepts an executable file path if you want to create your own driver binary...to get geckodriver go to https://github.com/mozilla/geckodriver/releases and download the driver for your system... save in C:\\ProgramData\\Anaconda3\\Scripts (if using Anaconda) or equivalent location on your system... run python script IN THAT FOLDER, not elsewhere or else you will have to do something like assign a path or use os package from selenium import webdriver from bs4 import BeautifulSoup browser = webdriver . Firefox () browser . get ( "http://wwwin-shopping-grouping-prd-pdp-vipgp01b/search/" ) elem = browser . find_element_by_name ( "q" ) elem . send_keys ( "a" , Keys . RETURN ) html = browser . page_source soup = BeautifulSoup ( html , 'html5lib' ) print ( soup )
+
+
+
+        
+
+
+'''create python code using the selenuim library for the following list of tasks.'''

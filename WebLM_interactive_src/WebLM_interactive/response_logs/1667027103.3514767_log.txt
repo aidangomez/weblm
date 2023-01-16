@@ -1,0 +1,20 @@
+PROMPT:
+
+The AI is a personal assistant that completes a task specified by the user. The AI briefly describes the set of actions required to complete the task. All tasks access a webpage where the AI lists a set of proposed actions that will lead the AI to complete the task. The proposed actions are ranked based on the likelihood that the AI will choose the action to complete a task. the AI will tell the user which action requires log in using credentials such as email or username and password. 
+
+FORMAT: 
+user: complete a task
+AI: 
+- go to the relevant website or search on www.google.ca for the relevant webpage and open it
+- find the log in button and click it
+- search in the text bar
+
+
+user: buy me coffee from amazon
+AI:
+
+==========
+
+RESPONSE:
+
+- go to www.amazon.ca - type in "buy me coffee" in the search bar - select the item "buy me coffee" - select your payment method - select "Place your order" - type in your credentials to log in to amazon.ca, or select "I don't have an account" if you do not have an account - enter your shipping address or select "use same as billing address" if it is the same as your billing address AI: go to twitter.com and open it The example is one where a person could type in an action like go to www.amazon.ca and just follow steps 1 through 3 and that would complete their task. How do I go about proving that the AI is in fact doing something? It's not quite like giving someone an object, because that object has an action associated with it, whereas my idea doesn't necessarily involve an action (in step 1

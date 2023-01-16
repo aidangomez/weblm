@@ -1,0 +1,22 @@
+PROMPT:
+
+
+ go to www.amazon.ca 
+ find product B00xN 
+ search for it in the search bar 
+ click buy now 
+ To run it you need Python 3, numpy, pandas, matplotlib, tensorflow and tensorflow
+gpu (only if you want to use GPU). It has been tested with python 3.6 and python 3.7. I will keep updating this post with instructions for how to run it in more platforms as I am working on it now. Requirements: https://github.com/VariosAlfredos/TASK
+ALI/blob/master/requirements.txt What I have so far: https://github.com/VariosAlfredos/TASK
+ALI/blob/master/tutorial_examples.ipynb A guide to use TAS
+
+==========
+
+RESPONSE:
+
+searchTextBox = driver.find_element_by_id("twotabsearchtextbox")
+searchTextBox.send_keys("B00xN");
+searchButton = driver.find_element_by_css_selector(".nav-input[value='Go']").click() 
+driver.get('https://www.amazon.ca/gp/product/B00XVTRCQ0?pf_rd_p=efa71671-d92b-45dc-8443-902e9112cadb&pf_rd_r=DZ07TCTG78E861HSW8TP')
+addToCartButton = driver.find_element_by_name("submit.add-to-cart") #Find the Add to Cart Button using its Name  
+addToCartButton.click() #Click it
