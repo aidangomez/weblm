@@ -26,7 +26,7 @@ class Controller:
     5. choose what element to click or what element to type in
     """
 
-    def __init__(self, co: cohere.Client, objective: str):
+    def __init__(self, co: cohere.Client, objective: str, prompt_user: bool = True):
         """
         Args:
             co (cohere.Client): a Cohere Client
@@ -34,6 +34,7 @@ class Controller:
         """
         self.co = co
         self.objective = objective
+        self.prompt_user = prompt_user
         self.previous_commands: List[str] = []
         self.moments: List[Tuple[str, str, str, List[str]]] = []
         self.user_responses: DefaultDict[str, int] = defaultdict(int)
@@ -138,7 +139,10 @@ class Controller:
             self._page_elements = page_elements
 
             if self._prioritized_elements is None or self._prioritized_elements_hash != hash(frozenset(page_elements)):
-                self._prioritized_elements = generate_prioritization(self.co, self.objective, page_elements, url,
+                pruned_elements = list(
+                    filter(lambda x: any(x.startswith(y) for y in CLICKABLE + TYPEABLE), page_elements))
+
+                self._prioritized_elements = generate_prioritization(self.co, self.objective, pruned_elements, url,
                                                                      self.previous_commands)
                 self._prioritized_elements_hash = hash(frozenset(page_elements))
                 self._pruned_prioritized_elements = self._prioritized_elements[:MAX_NUM_ELEMENTS]
@@ -158,8 +162,10 @@ class Controller:
                                                                self._pruned_prioritized_elements,
                                                                self.previous_commands, response)
 
-                if prompt is not None:
+                if prompt is not None and self.prompt_user:
                     return prompt
+                elif not self.prompt_user:
+                    self._step = DialogueState.Command
 
             if "click" in self._action:
                 pruned_elements = list(
@@ -190,7 +196,7 @@ class Controller:
                                    command=self._cmd,
                                    previous_commands=self.previous_commands)
 
-            if prompt is not None:
+            if prompt is not None and self.prompt_user:
                 return prompt
 
             self.moments.append((url, self._prioritized_elements, self._cmd, self.previous_commands.copy()))

@@ -14,19 +14,19 @@ def _get_cmd_prediction(co: cohere.Client, action: str, prompt: str, chosen_elem
         text = None
         while text is None:
             try:
-                num_tokens = 20
-                if len(co.tokenize(prompt)) > 2048 - num_tokens:
+                num_tokens = 60
+                if len(co.tokenize(prompt + action + chosen_element)) > 2048 - num_tokens:
                     print(f"WARNING: truncating sequence of length {len(co.tokenize(prompt))}")
                     prompt = truncate_left(co.tokenize, prompt, action, chosen_element, limit=2048 - num_tokens)
 
-                print(len(co.tokenize(prompt + action + chosen_element)))
                 text = max(co.generate(prompt=prompt + action + chosen_element,
                                        model=MODEL,
                                        temperature=0.5,
                                        num_generations=5,
                                        max_tokens=num_tokens,
                                        stop_sequences=["\n"],
-                                       return_likelihoods="GENERATION").generations,
+                                       return_likelihoods="GENERATION",
+                                       truncate="START").generations,
                            key=lambda x: x.likelihood).text
             except cohere.error.CohereError as e:
                 print(f"Cohere fucked up: {e}")
@@ -70,7 +70,7 @@ def generate_command(co: cohere.Client,
                                                      "elements": x
                                                  }, pruned_elements)),
                                              group_size,
-                                             topk=5)
+                                             topk=len(pruned_elements))
             chosen_element = chosen_elements[0]["id"]
 
             state = construct_state(objective, url, pruned_elements, previous_commands)
@@ -82,7 +82,7 @@ def generate_command(co: cohere.Client,
         cmd = _get_cmd_prediction(co, action, prompt, chosen_element)
 
         step = DialogueState.CommandFeedback
-        other_options = "\n".join(f"\t({i+2}){action}{x['id']}" for i, x in enumerate(chosen_elements[1:]))
+        other_options = "\n".join(f"\t({i+2}){action}{x['id']}" for i, x in enumerate(chosen_elements[1:6]))
         return step, cmd, chosen_elements, Prompt(eval(f'f"""{user_prompt_2}"""'))
     elif step == DialogueState.CommandFeedback:
         if response == "examples":

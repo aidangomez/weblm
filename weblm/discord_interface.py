@@ -137,7 +137,6 @@ class MyClient(discord.Client):
 
         while True:
             content = await crawler.crawl()
-            print("AIDAN", content)
 
             async with message.channel.typing():
                 if not controller.is_running():

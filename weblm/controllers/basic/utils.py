@@ -9,12 +9,13 @@ import random
 from typing import Any, Dict, List, Tuple
 import cohere
 import numpy as np
+import requests
 
 MAX_SEQ_LEN = 2000
 MAX_NUM_ELEMENTS = 30
 TYPEABLE = ["input", "select"]
 CLICKABLE = ["link", "button"]
-MODEL = "xlarge"
+MODEL = "command-xlarge-nightly"
 
 prompt_template = """Given:
     (1) an objective that you are trying to achieve
@@ -51,7 +52,8 @@ user_prompt_1 = ("Given web state:\n{state}"
                  "\n\t(y) proceed with this action"
                  "\n\t(n) do the other action" + user_prompt_end)
 user_prompt_2 = ("Given state:\n{construct_state(objective, url, pruned_elements, previous_commands)}"
-                 "\n\nSuggested command: {cmd}.\n\t(y) accept and continue"
+                 "\n\nSuggested command: {cmd}."
+                 "\n\t(y) accept and continue"
                  "\n\t(s) save example, accept, and continue"
                  "\n{other_options}"
                  "\n\t(back) choose a different action"
@@ -72,13 +74,19 @@ class DialogueState(Enum):
 
 
 def truncate_left(tokenize, prompt, *rest_of_prompt, limit=2048):
-    i = 0
-    chop_size = 5
-    print(f"WARNING: truncating sequence of length {len(tokenize(prompt + ''.join(rest_of_prompt)))} to length {limit}")
+    tokenized_prompt = tokenize(prompt + "".join(rest_of_prompt))
+    tokens = tokenized_prompt.token_strings
+
+    chunk_size = 15
     while len(tokenize(prompt + "".join(rest_of_prompt))) > limit:
-        prompt = prompt[i * chop_size:]
-        i += 1
+        prompt = prompt[chunk_size:]
+
     return prompt
+
+    # tokens = tokens[max(0, len(tokens) - limit):]
+    # print(len(tokens))
+    # print(prompt + "".join(rest_of_prompt))
+    # return "".join(tokens)
 
 
 def split_list_by_separators(l: List[Any], separator_sequences: List[List[Any]]) -> List[List[Any]]:
@@ -152,12 +160,18 @@ def _fn(x):
         try:
             if len(co.tokenize(prompt)) > 2048:
                 prompt = truncate_left(co.tokenize, prompt)
-            return (co.generate(prompt=prompt, max_tokens=0, model=MODEL,
-                                return_likelihoods=return_likelihoods).generations[0].likelihood, option)
+            return (co.generate(prompt=prompt,
+                                max_tokens=0,
+                                model=MODEL,
+                                return_likelihoods=return_likelihoods,
+                                truncate="START").generations[0].likelihood, option)
         except cohere.error.CohereError as e:
             print(f"Cohere fucked up: {e}")
             continue
         except ConnectionError as e:
+            print(f"Connection error: {e}")
+            continue
+        except requests.exceptions.ConnectionError as e:
             print(f"Connection error: {e}")
             continue
 
@@ -266,8 +280,8 @@ def shorten_prompt(co: cohere.Client,
     i, j = (0, 0)
     while (length_of_prompt - sum(length_of_examples)) + sum(
             length_of_examples[j:]) > target and j < len(examples) - MIN_EXAMPLES:
-        print(length_of_prompt, sum(length_of_examples), sum(length_of_examples[j:]))
-        print(length_of_prompt - sum(length_of_examples) + sum(length_of_examples[j:]))
+        # print(length_of_prompt, sum(length_of_examples), sum(length_of_examples[j:]))
+        # print(length_of_prompt - sum(length_of_examples) + sum(length_of_examples[j:]))
         j += 1
 
     print(f"num examples: {len(examples) - j}")
@@ -317,8 +331,8 @@ def gather_examples(co: cohere.Client, state: str, topk: int = 5, max_elements: 
         if all(x in h for x in ["objective", "url", "elements", "previous_commands", "command"]):
             elements = list(filter(lambda x: x[:4] != "text", h["elements"]))
 
-            command_element = " ".join(h["command"].split()[1:3])
-            command_element = list(filter(lambda x: command_element in x, elements))
+            command_element = h["command"].split()[2]
+            command_element = list(filter(lambda x: command_element in x.split(" "), elements))
             assert len(command_element) == 1, f"length is {len(command_element)}"
             command_element = command_element[0]
 
