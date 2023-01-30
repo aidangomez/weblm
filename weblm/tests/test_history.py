@@ -2,7 +2,9 @@ import json
 import os
 import random
 import fire
+import requests
 import cohere
+import numpy as np
 from weblm.controllers.basic.pick_action import pick_action
 from weblm.controllers.basic.pick_command import generate_command
 from weblm.controllers.basic.prioritize import generate_prioritization
@@ -15,111 +17,92 @@ co = cohere.Client(os.environ.get("COHERE_KEY"), check_api_key=False)
 def main():
     test_slice = split_history()
     os.chdir("/tmp")
-    test_prioritization(test_slice)
-    test_action_selection(test_slice)
-    test_element_selection(test_slice)
+    test_prioritization_action_command(test_slice)
 
 
-def test_prioritization(history):
-    top_1, top_5, top_10, top_20, top_40 = 0, 0, 0, 0, 0
+def test_prioritization_action_command(history):
 
     def _test(h):
-        page_elements = list(filter(lambda x: any(x.startswith(y) for y in CLICKABLE + TYPEABLE), h["elements"]))
-        prioritized_elements = generate_prioritization(co, h["objective"], page_elements, h["url"],
-                                                       h["previous_commands"])
-        correct_element = " ".join(h["command"].split(" ")[1:3])
+        while True:
+            try:
+                page_elements = list(filter(lambda x: any(x.startswith(y) for y in CLICKABLE + TYPEABLE),
+                                            h["elements"]))
 
-        top_1_score = int(any(correct_element in e for e in prioritized_elements[:1]))
-        top_5_score = int(any(correct_element in e for e in prioritized_elements[:5]))
-        top_10_score = int(any(correct_element in e for e in prioritized_elements[:10]))
-        top_20_score = int(any(correct_element in e for e in prioritized_elements[:20]))
-        top_40_score = int(any(correct_element in e for e in prioritized_elements[:40]))
+                prioritized_elements = generate_prioritization(co, h["objective"], page_elements, h["url"],
+                                                               h["previous_commands"])[:MAX_NUM_ELEMENTS]
 
-        return (top_1_score, top_5_score, top_10_score, top_20_score, top_40_score)
+                correct_element = " ".join(h["command"].split(" ")[1:3])
+                prioritization_top_1_score = int(any(correct_element in e for e in prioritized_elements[:1]))
+                prioritization_top_5_score = int(any(correct_element in e for e in prioritized_elements[:5]))
+                prioritization_top_10_score = int(any(correct_element in e for e in prioritized_elements[:10]))
+                prioritization_top_20_score = int(any(correct_element in e for e in prioritized_elements[:20]))
+                prioritization_top_40_score = int(any(correct_element in e for e in prioritized_elements[:40]))
+                scores = [
+                    prioritization_top_1_score, prioritization_top_5_score, prioritization_top_10_score,
+                    prioritization_top_20_score, prioritization_top_40_score
+                ]
+
+                _, action, _ = pick_action(co, DialogueState.Action, None, h["objective"], h["url"],
+                                           prioritized_elements, h["previous_commands"], None)
+
+                correct_action = h["command"].split(" ")[0]
+
+                action_acc = int(action.strip() == correct_action)
+                scores.append(action_acc)
+
+                if correct_action == "click":
+                    prioritized_elements = list(
+                        filter(lambda x: any(x.startswith(y) for y in CLICKABLE), prioritized_elements))
+                elif correct_action == "type":
+                    prioritized_elements = list(
+                        filter(lambda x: any(x.startswith(y) for y in TYPEABLE), prioritized_elements))
+                else:
+                    assert 0, correct_action
+
+                _, _, chosen_elements, _ = generate_command(co, DialogueState.Command, " " + correct_action, None, None,
+                                                            h["objective"], h["url"], prioritized_elements,
+                                                            h["previous_commands"], None)
+
+                chosen_elements = [e["id"] for e in chosen_elements]
+                correct_element = " ".join(h["command"].split(" ")[1:3])
+
+                command_top_1_score = int(any(correct_element in e for e in chosen_elements[:1]))
+                command_top_5_score = int(any(correct_element in e for e in chosen_elements[:5]))
+                command_top_10_score = int(any(correct_element in e for e in chosen_elements[:10]))
+                command_top_20_score = int(any(correct_element in e for e in chosen_elements[:20]))
+                command_top_40_score = int(any(correct_element in e for e in chosen_elements[:40]))
+                scores += [
+                    command_top_1_score, command_top_5_score, command_top_10_score, command_top_20_score,
+                    command_top_40_score
+                ]
+
+                return np.array(scores)
+            except (cohere.CohereError, requests.exceptions.RetryError):
+                print("cohere fucked up, retrying...")
 
     with ThreadPoolExecutor(len(history)) as pp:
         results = pp.map(_test, history)
 
-    for a, b, c, d, e in results:
-        top_1 += a
-        top_5 += b
-        top_10 += c
-        top_20 += d
-        top_40 += e
+    scores = np.array([0] * 11)
+    for a in results:
+        scores += a
 
     print("Prioritization Test")
-    print(f"Top-1 Accuracy: {top_1 / len(history)}")
-    print(f"Top-5 Accuracy: {top_5 / len(history)}")
-    print(f"Top-10 Accuracy: {top_10 / len(history)}")
-    print(f"Top-20 Accuracy: {top_20 / len(history)}")
-    print(f"Top-40 Accuracy: {top_40 / len(history)}")
-
-
-def test_action_selection(history):
-    top_1 = 0
-
-    def _test(h):
-        page_elements = list(filter(lambda x: any(x.startswith(y) for y in CLICKABLE + TYPEABLE), h["elements"]))
-
-        prioritized_elements = generate_prioritization(co, h["objective"], page_elements, h["url"],
-                                                       h["previous_commands"])[:MAX_NUM_ELEMENTS]
-
-        _, action, _ = pick_action(co, DialogueState.Action, None, h["objective"], h["url"], prioritized_elements,
-                                   h["previous_commands"], None)
-
-        correct_action = h["command"].split(" ")[0]
-
-        return int(action.strip() == correct_action)
-
-    with ThreadPoolExecutor(len(history)) as pp:
-        results = pp.map(_test, history)
-
-    for a in results:
-        top_1 += a
+    print(f"Top-1 Accuracy: {scores[0] / len(history)}")
+    print(f"Top-5 Accuracy: {scores[1] / len(history)}")
+    print(f"Top-10 Accuracy: {scores[2] / len(history)}")
+    print(f"Top-20 Accuracy: {scores[3] / len(history)}")
+    print(f"Top-40 Accuracy: {scores[4] / len(history)}")
 
     print("Action Selection Test")
-    print(f"Top-1 Accuracy: {top_1 / len(history)}")
-
-
-def test_element_selection(history):
-    top_1, top_5, top_10, top_20, top_40 = 0, 0, 0, 0, 0
-
-    def _test(h):
-        page_elements = list(filter(lambda x: any(x.startswith(y) for y in CLICKABLE + TYPEABLE), h["elements"]))
-        prioritized_elements = generate_prioritization(co, h["objective"], page_elements, h["url"],
-                                                       h["previous_commands"])[:MAX_NUM_ELEMENTS]
-        action = " " + h["command"].split(" ")[0]
-
-        _, _, chosen_elements, _ = generate_command(co, DialogueState.Command, action, None, None, h["objective"],
-                                                    h["url"], prioritized_elements, h["previous_commands"], None)
-
-        chosen_elements = [e["id"] for e in chosen_elements]
-        correct_element = " ".join(h["command"].split(" ")[1:3])
-
-        top_1_score = int(any(correct_element in e for e in chosen_elements[:1]))
-        top_5_score = int(any(correct_element in e for e in chosen_elements[:5]))
-        top_10_score = int(any(correct_element in e for e in chosen_elements[:10]))
-        top_20_score = int(any(correct_element in e for e in chosen_elements[:20]))
-        top_40_score = int(any(correct_element in e for e in chosen_elements[:40]))
-
-        return (top_1_score, top_5_score, top_10_score, top_20_score, top_40_score)
-
-    with ThreadPoolExecutor(len(history)) as pp:
-        results = pp.map(_test, history)
-
-    for a, b, c, d, e in results:
-        top_1 += a
-        top_5 += b
-        top_10 += c
-        top_20 += d
-        top_40 += e
+    print(f"Top-1 Accuracy: {scores[5] / len(history)}")
 
     print("Command Element Selection Test")
-    print(f"Top-1 Accuracy: {top_1 / len(history)}")
-    print(f"Top-5 Accuracy: {top_5 / len(history)}")
-    print(f"Top-10 Accuracy: {top_10 / len(history)}")
-    print(f"Top-20 Accuracy: {top_20 / len(history)}")
-    print(f"Top-40 Accuracy: {top_40 / len(history)}")
+    print(f"Top-1 Accuracy: {scores[6] / len(history)}")
+    print(f"Top-5 Accuracy: {scores[7] / len(history)}")
+    print(f"Top-10 Accuracy: {scores[8] / len(history)}")
+    print(f"Top-20 Accuracy: {scores[9] / len(history)}")
+    print(f"Top-40 Accuracy: {scores[10] / len(history)}")
 
 
 def split_history():
