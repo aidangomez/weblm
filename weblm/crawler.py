@@ -137,7 +137,10 @@ class Crawler:
                     offset = (0, 0)
                 else:
                     bounding_box = frame.frame_element().bounding_box()
-                    offset = (bounding_box["x"], bounding_box["y"])
+                    if bounding_box is None:
+                        offset = (0, 0)
+                    else:
+                        offset = (bounding_box["x"], bounding_box["y"])
             except playwright._impl._api_types.Error:
                 offset = (0, 0)
 

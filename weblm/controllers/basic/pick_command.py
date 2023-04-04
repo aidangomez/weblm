@@ -4,105 +4,118 @@ import re
 from typing import Dict, List
 import cohere
 
-from weblm.controllers.basic.utils import (MODEL, DialogueState, construct_prompt, construct_state, gather_examples,
-                                           shorten_prompt, truncate_left, user_prompt_2, user_prompt_3, choose_element)
+from weblm.controllers.basic.utils import (MODEL, MAX_SEQ_LEN, DialogueState, construct_prompt, construct_state,
+                                           gather_examples, shorten_prompt, truncate_left, user_prompt_2, user_prompt_3,
+                                           choose_element)
 from weblm.utils import Prompt
 
 
-def _get_cmd_prediction(co: cohere.Client, action: str, prompt: str, chosen_element: str) -> str:
-    if "type" in action:
-        text = None
-        while text is None:
-            try:
-                num_tokens = 60
-                if len(co.tokenize(prompt + action + chosen_element)) > 2048 - num_tokens:
-                    print(f"WARNING: truncating sequence of length {len(co.tokenize(prompt))}")
-                    prompt = truncate_left(co.tokenize, prompt, action, chosen_element, limit=2048 - num_tokens)
+class CommandGeneration():
 
-                text = max(co.generate(prompt=prompt + action + chosen_element,
-                                       model=MODEL,
-                                       temperature=0.5,
-                                       num_generations=5,
-                                       max_tokens=num_tokens,
-                                       stop_sequences=["\n"],
-                                       return_likelihoods="GENERATION",
-                                       truncate="START").generations,
-                           key=lambda x: x.likelihood).text
-            except cohere.error.CohereError as e:
-                print(f"Cohere fucked up: {e}")
-                continue
-    else:
-        text = ""
+    def __init__(self) -> None:
+        self.training_example = None
 
-    return (action + chosen_element + text).strip()
+    def _get_cmd_prediction(self, co: cohere.Client, action: str, prompt: str, chosen_element: str) -> str:
+        if "type" in action:
+            text = None
+            while text is None:
+                try:
+                    num_tokens = 60
+                    if len(co.tokenize(prompt + action + chosen_element)) > MAX_SEQ_LEN - num_tokens:
+                        print(f"WARNING: truncating sequence of length {len(co.tokenize(prompt))}")
+                        prompt = truncate_left(co.tokenize,
+                                               prompt,
+                                               action,
+                                               chosen_element,
+                                               limit=MAX_SEQ_LEN - num_tokens)
 
-
-def generate_command(co: cohere.Client,
-                     step: str,
-                     action: str,
-                     cmd: str,
-                     chosen_elements: List[Dict[str, str]],
-                     objective: str,
-                     url: str,
-                     pruned_elements: List[str],
-                     previous_commands: List[str],
-                     response: str = None):
-    state = construct_state(objective, url, pruned_elements, previous_commands)
-    examples = gather_examples(co, state)
-    prompt = construct_prompt(state, examples)
-
-    if step == DialogueState.Command:
-        if len(pruned_elements) == 1:
-            chosen_element = " " + " ".join(pruned_elements[0].split(" ")[:2])
-            chosen_elements = [{"id": chosen_element}]
+                    text = max(co.generate(prompt=prompt + action + chosen_element,
+                                           model=MODEL,
+                                           temperature=0.5,
+                                           num_generations=5,
+                                           max_tokens=num_tokens,
+                                           stop_sequences=["\n"],
+                                           return_likelihoods="GENERATION",
+                                           truncate="START").generations,
+                               key=lambda x: x.likelihood).text
+                except cohere.error.CohereError as e:
+                    print(f"Cohere fucked up: {e}")
+                    continue
         else:
-            state = construct_state(objective, url, ["$elements"], previous_commands)
-            prompt = construct_prompt(state, examples)
+            text = ""
 
-            state, prompt = shorten_prompt(co, objective, url, ["$elements"], previous_commands, examples, action)
+        return (action + chosen_element + text).strip()
 
-            group_size = 20
-            chosen_elements = choose_element(co,
-                                             prompt + action + "{id}",
-                                             list(
-                                                 map(lambda x: {
-                                                     "id": " " + " ".join(x.split(" ")[:2]),
-                                                     "elements": x
-                                                 }, pruned_elements)),
-                                             group_size,
-                                             topk=len(pruned_elements))
-            chosen_element = chosen_elements[0]["id"]
+    def generate_command(self,
+                         co: cohere.Client,
+                         step: str,
+                         action: str,
+                         cmd: str,
+                         chosen_elements: List[Dict[str, str]],
+                         objective: str,
+                         url: str,
+                         pruned_elements: List[str],
+                         previous_commands: List[str],
+                         response: str = None):
+        state = construct_state(objective, url, pruned_elements, previous_commands)
+        examples = gather_examples(co, state)
+        prompt = construct_prompt(state, examples)
 
-            state = construct_state(objective, url, pruned_elements, previous_commands)
-            prompt = construct_prompt(state, examples)
+        if step == DialogueState.Command:
+            if len(pruned_elements) == 1:
+                chosen_element = " " + " ".join(pruned_elements[0].split(" ")[:2])
+                chosen_elements = [{"id": chosen_element}]
+            else:
+                state = construct_state(objective, url, ["$elements"], previous_commands)
+                prompt = construct_prompt(state, examples)
 
-            state, prompt = shorten_prompt(co, objective, url, pruned_elements, previous_commands, examples, action,
-                                           chosen_element)
+                state, prompt = shorten_prompt(co, objective, url, ["$elements"], previous_commands, examples, action)
 
-        cmd = _get_cmd_prediction(co, action, prompt, chosen_element)
+                group_size = 20
+                chosen_elements = choose_element(
+                    co,
+                    prompt + action + "{id}",
+                    list(map(lambda x: {
+                        "id": " " + " ".join(x.split(" ")[:2]),
+                        "elements": x
+                    }, pruned_elements)),
+                    group_size,
+                    topk=len(pruned_elements))
+                chosen_element = chosen_elements[0]["id"]
 
-        step = DialogueState.CommandFeedback
-        other_options = "\n".join(f"\t({i+2}){action}{x['id']}" for i, x in enumerate(chosen_elements[1:6]))
-        return step, cmd, chosen_elements, Prompt(eval(f'f"""{user_prompt_2}"""'))
-    elif step == DialogueState.CommandFeedback:
-        if response == "examples":
-            examples = "\n".join(examples)
-            return step, cmd, chosen_elements, Prompt(f"Examples:\n{examples}\n\n"
-                                                      "Please respond with 'y' or 's'")
+                state = construct_state(objective, url, pruned_elements, previous_commands)
+                prompt = construct_prompt(state, examples)
 
-        if re.match(r'\d+', response):
-            chosen_element = chosen_elements[int(response) - 1]["id"]
-            state, prompt = shorten_prompt(co, objective, url, pruned_elements, previous_commands, examples, action,
-                                           chosen_element)
-            cmd = _get_cmd_prediction(co, action, prompt, chosen_element)
-            if "type" in action:
-                return step, cmd, chosen_elements, Prompt(eval(f'f"""{user_prompt_3}"""'))
-        elif response != "y" and response != "s":
-            cmd = response
+                state, prompt = shorten_prompt(co, objective, url, pruned_elements, previous_commands, examples, action,
+                                               chosen_element)
 
-        cmd_pattern = r"(click|type) (link|button|input|select) [\d]+( \"\w+\")?"
-        if not re.match(cmd_pattern, cmd):
-            return step, cmd, chosen_elements, Prompt(
-                f"Invalid command '{cmd}'. Must match regex '{cmd_pattern}'. Try again...")
+            cmd = self._get_cmd_prediction(co, action, prompt, chosen_element)
 
-    return step, cmd, chosen_elements, None
+            step = DialogueState.CommandFeedback
+            other_options = "\n".join(f"\t({i+2}){action}{x['id']}" for i, x in enumerate(chosen_elements[1:6]))
+            return step, cmd, chosen_elements, Prompt(eval(f'f"""{user_prompt_2}"""'))
+        elif step == DialogueState.CommandFeedback:
+            if response == "examples":
+                examples = "\n".join(examples)
+                return step, cmd, chosen_elements, Prompt(f"Examples:\n{examples}\n\n"
+                                                          "Please respond with 'y' or 's'")
+
+            if re.match(r'\d+', response):
+                chosen_element = chosen_elements[int(response) - 1]["id"]
+                state, prompt = shorten_prompt(co, objective, url, pruned_elements, previous_commands, examples, action,
+                                               chosen_element)
+                cmd = self._get_cmd_prediction(co, action, prompt, chosen_element)
+                if "type" in action:
+                    return step, cmd, chosen_elements, Prompt(eval(f'f"""{user_prompt_3}"""'))
+            elif response != "y" and response != "s":
+                cmd = response
+
+            cmd_pattern = r"(click|type) (link|button|input|select) [\d]+( \"\w+\")?"
+            if not re.match(cmd_pattern, cmd):
+                return step, cmd, chosen_elements, Prompt(
+                    f"Invalid command '{cmd}'. Must match regex '{cmd_pattern}'. Try again...")
+
+            _, _prompt = shorten_prompt(co, objective, url, pruned_elements, previous_commands, examples)
+            self.training_example = (_prompt, cmd)
+
+        return step, cmd, chosen_elements, None

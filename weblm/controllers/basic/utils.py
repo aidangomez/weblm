@@ -15,7 +15,12 @@ MAX_SEQ_LEN = 2000
 MAX_NUM_ELEMENTS = 30
 TYPEABLE = ["input", "select"]
 CLICKABLE = ["link", "button"]
-MODEL = "command-xlarge-nightly"
+# MODEL = "command-52b-v6-jan23-1ck7wkvv"
+# MODEL = "command-52b-v7-jan23-ygalbkgq"
+# MODEL = "command-xlarge-nightly"
+MODEL = "command-medium-nightly"
+# MODEL = "bos-eos-6b-v2"
+# MODEL = "xlarge"
 
 prompt_template = """Given:
     (1) an objective that you are trying to achieve
@@ -73,7 +78,7 @@ class DialogueState(Enum):
     CommandFeedback = "command from feedback"
 
 
-def truncate_left(tokenize, prompt, *rest_of_prompt, limit=2048):
+def truncate_left(tokenize, prompt, *rest_of_prompt, limit=MAX_SEQ_LEN):
     tokenized_prompt = tokenize(prompt + "".join(rest_of_prompt))
     tokens = tokenized_prompt.token_strings
 
@@ -150,19 +155,19 @@ def construct_prompt(state: str, examples: List[str]) -> str:
 
 
 def _fn(x):
-    if len(x) == 3:
-        option, prompt, co = x
+    if len(x) == 4:
+        option, prompt, co, model = x
         return_likelihoods = "ALL"
-    elif len(x) == 4:
-        option, prompt, co, return_likelihoods = x
+    elif len(x) == 5:
+        option, prompt, co, return_likelihoods, model = x
 
     while True:
         try:
-            if len(co.tokenize(prompt)) > 2048:
+            if len(co.tokenize(prompt)) > MAX_SEQ_LEN:
                 prompt = truncate_left(co.tokenize, prompt)
             return (co.generate(prompt=prompt,
                                 max_tokens=0,
-                                model=MODEL,
+                                model=model,
                                 return_likelihoods=return_likelihoods,
                                 truncate="START").generations[0].likelihood, option)
         except cohere.error.CohereError as e:
@@ -180,7 +185,8 @@ def choose(co: cohere.Client,
            template: str,
            options: List[Dict[str, str]],
            return_likelihoods: str = "ALL",
-           topk: int = 1) -> List[Tuple[int, Dict[str, str]]]:
+           topk: int = 1,
+           model: str = MODEL) -> List[Tuple[int, Dict[str, str]]]:
     """Choose the most likely continuation of `prompt` from a set of `options`.
 
     Args:
@@ -195,7 +201,7 @@ def choose(co: cohere.Client,
         _lh = pp.map(
             _fn,
             zip(options, [template.format(**option) for option in options], [co] * num_options,
-                [return_likelihoods] * num_options))
+                [return_likelihoods] * num_options, [model] * num_options))
     return sorted(_lh, key=lambda x: x[0], reverse=True)[:topk]
 
 

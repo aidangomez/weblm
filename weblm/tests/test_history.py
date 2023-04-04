@@ -6,7 +6,7 @@ import requests
 import cohere
 import numpy as np
 from weblm.controllers.basic.pick_action import pick_action
-from weblm.controllers.basic.pick_command import generate_command
+from weblm.controllers.basic.pick_command import CommandGeneration
 from weblm.controllers.basic.prioritize import generate_prioritization
 from weblm.controllers.basic.utils import CLICKABLE, MAX_NUM_ELEMENTS, TYPEABLE, DialogueState
 from concurrent.futures import ThreadPoolExecutor
@@ -59,9 +59,11 @@ def test_prioritization_action_command(history):
                 else:
                     assert 0, correct_action
 
-                _, _, chosen_elements, _ = generate_command(co, DialogueState.Command, " " + correct_action, None, None,
-                                                            h["objective"], h["url"], prioritized_elements,
-                                                            h["previous_commands"], None)
+                _, _, chosen_elements, _ = CommandGeneration().generate_command(co, DialogueState.Command,
+                                                                                " " + correct_action, None, None,
+                                                                                h["objective"], h["url"],
+                                                                                prioritized_elements,
+                                                                                h["previous_commands"], None)
 
                 chosen_elements = [e["id"] for e in chosen_elements]
                 correct_element = " ".join(h["command"].split(" ")[1:3])

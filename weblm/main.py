@@ -17,6 +17,7 @@ from .controllers import registry
 from .crawler import URL_PATTERN, Crawler
 from .utils import Prompt, Command
 
+# cohere.COHERE_API_URL = 'https://stg.api.cohere.ai'
 co = cohere.Client(os.environ.get("COHERE_KEY"), check_api_key=False)
 
 

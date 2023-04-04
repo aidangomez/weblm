@@ -7,7 +7,7 @@ from collections import defaultdict
 from typing import DefaultDict, Dict, List, Tuple, Union
 
 import cohere
-from weblm.controllers.basic.pick_command import generate_command
+from weblm.controllers.basic.pick_command import CommandGeneration
 from weblm.controllers.basic.prioritize import generate_prioritization
 from weblm.controllers.basic.pick_action import pick_action
 from weblm.controllers.basic.utils import (CLICKABLE, MAX_NUM_ELEMENTS, TYPEABLE, DialogueState, construct_state,
@@ -36,7 +36,7 @@ class Controller:
         self.objective = objective
         self.prompt_user = prompt_user
         self.previous_commands: List[str] = []
-        self.moments: List[Tuple[str, str, str, List[str]]] = []
+        self.moments: List[Tuple[str, str, str, List[str], Tuple[str, str]]] = []
         self.user_responses: DefaultDict[str, int] = defaultdict(int)
         self.reset_state()
 
@@ -53,14 +53,20 @@ class Controller:
         self._prioritized_elements_hash = None
         self._page_elements = None
         self._error = None
+        self._command_generation = CommandGeneration()
 
     def success(self):
-        for url, elements, command, previous_commands in self.moments:
+        for url, elements, command, previous_commands, training_example in self.moments:
             self._save_example(objective=self.objective,
                                url=url,
                                elements=elements,
                                command=command,
                                previous_commands=previous_commands)
+            self.co.generate_feedback(
+                request_id="acde070d-8c4c-4f0d-9d8a-162843c10333",  # this is a fake uuid
+                good_response=False,
+                prompt=training_example[0],
+                desired_response=training_example[1])
 
     def _save_example(self, objective: str, url: str, elements: List[str], command: str, previous_commands: List[str]):
         state = construct_state(objective, url, elements[:MAX_NUM_ELEMENTS], previous_commands)
@@ -184,11 +190,10 @@ class Controller:
             elif response == "elements":
                 return Prompt("\n".join(str(d) for d in self._chosen_elements))
 
-            self._step, self._cmd, self._chosen_elements, prompt = generate_command(self.co, self._step, self._action,
-                                                                                    self._cmd, self._chosen_elements,
-                                                                                    self.objective, url,
-                                                                                    pruned_elements,
-                                                                                    self.previous_commands, response)
+            self._step, self._cmd, self._chosen_elements, prompt = self._command_generation.generate_command(
+                self.co, self._step, self._action, self._cmd, self._chosen_elements, self.objective, url,
+                pruned_elements, self.previous_commands, response)
+
             if self._step == DialogueState.CommandFeedback and response == "s":
                 self._save_example(objective=self.objective,
                                    url=url,
@@ -199,7 +204,8 @@ class Controller:
             if prompt is not None and self.prompt_user:
                 return prompt
 
-            self.moments.append((url, self._prioritized_elements, self._cmd, self.previous_commands.copy()))
+            self.moments.append((url, self._prioritized_elements, self._cmd, self.previous_commands.copy(),
+                                 self._command_generation.training_example))
             self.previous_commands.append(self._cmd)
 
             cmd = Command(self._cmd.strip())

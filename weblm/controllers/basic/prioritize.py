@@ -8,6 +8,8 @@ import json
 
 from weblm.controllers.basic.utils import construct_state, choose
 
+MODEL = "command-medium-nightly"
+
 prioritization_template = """$examples
 ---
 Here are the most relevant elements on the webpage (links, buttons, selects and inputs) to achieve the objective below:
@@ -75,7 +77,12 @@ def generate_prioritization(co: cohere.Client, objective: str, page_elements: Li
     prioritization = prioritization.replace("$objective", objective)
     prioritization = prioritization.replace("$url", url)
 
-    prioritized_elements = choose(co, prioritization, [{"element": x} for x in page_elements], topk=len(page_elements))
+    prioritized_elements = choose(co,
+                                  prioritization, [{
+                                      "element": x
+                                  } for x in page_elements],
+                                  topk=len(page_elements),
+                                  model=MODEL)
     prioritized_elements = [x[1]["element"] for x in prioritized_elements]
 
     return prioritized_elements
